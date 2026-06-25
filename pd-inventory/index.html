@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="透析在庫">
+<title>腹膜透析 在庫管理</title>
+<style>
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+  margin: 0; padding: 0;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: 'Hiragino Sans', sans-serif;
+  background: #f0f4f8;
+  color: #1e293b;
+  font-size: 16px;
+  padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  width: 100%;
+}
+
+/* ヘッダー */
+.hd {
+  background: linear-gradient(135deg, #1e40af, #3b82f6);
+  color: white; text-align: center;
+  padding: calc(18px + env(safe-area-inset-top)) 12px 14px; width: 100%;
+}
+.hd h1 { font-size: 20px; font-weight: bold; margin: 0; }
+.hd .sub { font-size: 12px; margin-top: 4px; opacity: 0.88; }
+
+.guide {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 12px;
+  color: #1e3a8a;
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 10px;
+  padding: 12px 14px;
+  width: calc(100% - 20px);
+}
+.guide b { color: #1d4ed8; }
+
+/* ブロック */
+.blk {
+  background: white;
+  margin: 10px;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  width: calc(100% - 20px);
+}
+.blk-title {
+  font-size: 14px; font-weight: bold; color: #1d4ed8;
+  border-bottom: 2px solid #dbeafe;
+  padding-bottom: 8px; margin-bottom: 14px;
+}
+
+/* 日付 */
+.dg { margin-bottom: 12px; }
+.dg:last-child { margin-bottom: 0; }
+.dg label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 5px; }
+input[type="date"] {
+  width: 100%; padding: 14px 10px; font-size: 17px;
+  border: 2px solid #cbd5e1; border-radius: 10px;
+  background: #f8fafc; color: #1e293b;
+  -webkit-appearance: none; display: block;
+}
+
+/* 物品カード */
+.ic {
+  border: 1.5px solid #e2e8f0; border-radius: 12px;
+  padding: 12px; margin-bottom: 10px; background: #f8fafc;
+}
+.ic:last-child { margin-bottom: 0; }
+.ic-name { font-size: 16px; font-weight: bold; margin-bottom: 1px; }
+.ic-sub  { font-size: 11px; color: #64748b; margin-bottom: 10px; }
+
+/* カウンター行 */
+.cr {
+  display: flex; align-items: center;
+  margin-bottom: 8px; width: 100%;
+}
+.cr:last-child { margin-bottom: 0; }
+.cr-label { font-size: 13px; color: #475569; width: 56px; flex-shrink: 0; }
+
+/* ステッパー */
+.sp { display: flex; align-items: center; flex: 1; min-width: 0; }
+.sp-btn {
+  width: 48px; height: 48px; flex-shrink: 0;
+  background: #e2e8f0; border: none; border-radius: 10px;
+  font-size: 24px; font-weight: bold; color: #1e293b;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  position: relative;
+  z-index: 2;
+}
+.sp-btn:active { background: #cbd5e1; }
+.sp-inp {
+  flex: 1; min-width: 0;
+  text-align: center; font-size: 24px; font-weight: bold; color: #1e293b;
+  border: 2px solid #cbd5e1; border-radius: 8px;
+  padding: 10px 4px; margin: 0 6px;
+  background: white; -webkit-appearance: none; width: 100%;
+}
+.sp-inp:focus { border-color: #3b82f6; outline: none; }
+.sp-unit { font-size: 13px; color: #64748b; width: 32px; flex-shrink: 0; text-align: left; }
+
+/* セクション見出し */
+.sec-hd {
+  font-size: 14px; font-weight: bold; color: #374151;
+  background: #f1f5f9; border-radius: 8px;
+  padding: 10px 12px; margin-bottom: 12px;
+}
+
+/* 計算ボタン */
+.calc-btn {
+  display: block; width: calc(100% - 20px);
+  position: sticky;
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  z-index: 30;
+  margin: 0 10px 12px;
+  padding: 16px; background: #2563eb; color: white;
+  border: none; border-radius: 14px;
+  font-size: 17px; font-weight: bold;
+  cursor: pointer; text-align: center;
+  box-shadow: 0 4px 14px rgba(37,99,235,0.3);
+  touch-action: manipulation;
+  user-select: none; -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.calc-btn:active { background: #1d4ed8; }
+
+/* 結果カード */
+.rc {
+  border-radius: 14px; padding: 16px;
+  margin: 0 10px 10px; width: calc(100% - 20px);
+}
+.rc.ok     { background: #f0fdf4; border: 2px solid #86efac; }
+.rc.warn   { background: #fffbeb; border: 2px solid #fbbf24; }
+.rc.danger { background: #fef2f2; border: 2px solid #f87171; }
+.rc-title  { font-size: 15px; font-weight: bold; margin-bottom: 3px; }
+.rc-title.ok     { color: #15803d; }
+.rc-title.warn   { color: #92400e; }
+.rc-title.danger { color: #dc2626; }
+.rc-date { font-size: 12px; color: #64748b; margin-bottom: 10px; }
+.rr {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 0; border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+.rr:last-child { border-bottom: none; }
+.rr-name { font-size: 14px; color: #334155; flex: 1; }
+.rr-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.rr-num { font-size: 16px; font-weight: bold; }
+.rr-num.ok     { color: #15803d; }
+.rr-num.warn   { color: #92400e; }
+.rr-num.danger { color: #dc2626; }
+
+.legend {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  font-size: 12px; color: #64748b;
+  background: white; border-radius: 10px;
+  padding: 10px 14px; margin: 0 10px 10px;
+  width: calc(100% - 20px);
+}
+
+/* PDFボタン */
+.pdf-btn {
+  display: block; width: calc(100% - 20px);
+  margin: 0 10px 20px;
+  padding: 14px; background: #16a34a; color: white;
+  border: none; border-radius: 14px;
+  font-size: 16px; font-weight: bold;
+  cursor: pointer; text-align: center;
+  box-shadow: 0 4px 14px rgba(22,163,74,0.3);
+  touch-action: manipulation;
+}
+.pdf-btn:active { background: #15803d; }
+
+.share-note {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  color: #3730a3;
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0 10px 10px;
+  padding: 10px 12px;
+  width: calc(100% - 20px);
+}
+
+/* 印刷専用エリア */
+#print-header { display: none; }
+
+/* 印刷・PDF保存用スタイル */
+@media print {
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: white; padding: 0; font-size: 13px; }
+  .blk, .calc-btn, .legend, #pdf-btn-wrap { display: none !important; }
+  #print-header {
+    display: block !important;
+    text-align: center; padding: 12px;
+    font-size: 13px; color: #475569;
+    border-bottom: 2px solid #dbeafe; margin-bottom: 8px;
+  }
+  .hd {
+    background: linear-gradient(135deg, #1e40af, #3b82f6) !important;
+    padding: 14px 12px !important;
+  }
+  .rc {
+    margin: 8px 0 !important; width: 100% !important;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .rc.ok     { background: #f0fdf4 !important; border: 2px solid #86efac !important; }
+  .rc.warn   { background: #fffbeb !important; border: 2px solid #fbbf24 !important; }
+  .rc.danger { background: #fef2f2 !important; border: 2px solid #f87171 !important; }
+  #result { padding: 0 8px; }
+}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <h1>🩺 腹膜透析 在庫管理</h1>
+  <div class="sub" id="today-lbl"></div>
+</div>
+<div id="print-header"></div>
+
+<div class="guide">
+  <b>使い方</b><br>
+  1. 訪問看護師さんが来る日と配送日を入れる<br>
+  2. いま家にある箱数・端数を入れる<br>
+  3. 1日あたりの使用量を確認して「在庫数を計算する」<br>
+  入力した内容は、このブラウザ内に自動保存されます。
+</div>
+
+<!-- 日付 -->
+<div class="blk">
+  <div class="blk-title">📅 日付を入力してください</div>
+  <div class="dg">
+    <label>👩‍⚕️ 訪問看護師が来る日</label>
+    <input type="date" id="nd">
+  </div>
+  <div class="dg">
+    <label>🚚 病院から配送される日</label>
+    <input type="date" id="dd">
+  </div>
+</div>
+
+<!-- 在庫入力 -->
+<div class="blk">
+  <div class="blk-title">📦 現在の在庫数を入力</div>
+
+  <div class="ic">
+    <div class="ic-name">レギュニール 2.5</div>
+    <div class="ic-sub">2500mL（1箱＝4袋）</div>
+    <div class="cr">
+      <div class="cr-label">箱数</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('r25b',-1)">−</button>
+        <input class="sp-inp" type="number" id="r25b" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('r25b',1)">＋</button>
+      </div>
+      <div class="sp-unit">箱</div>
+    </div>
+    <div class="cr">
+      <div class="cr-label">端数</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('r25u',-1)">−</button>
+        <input class="sp-inp" type="number" id="r25u" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('r25u',1)">＋</button>
+      </div>
+      <div class="sp-unit">袋</div>
+    </div>
+  </div>
+
+  <div class="ic">
+    <div class="ic-name">レギュニール 4.25</div>
+    <div class="ic-sub">2000mL（1箱＝4袋）</div>
+    <div class="cr">
+      <div class="cr-label">箱数</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('r4b',-1)">−</button>
+        <input class="sp-inp" type="number" id="r4b" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('r4b',1)">＋</button>
+      </div>
+      <div class="sp-unit">箱</div>
+    </div>
+    <div class="cr">
+      <div class="cr-label">端数</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('r4u',-1)">−</button>
+        <input class="sp-inp" type="number" id="r4u" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('r4u',1)">＋</button>
+      </div>
+      <div class="sp-unit">袋</div>
+    </div>
+  </div>
+
+  <div class="ic">
+    <div class="ic-name">UVツインバッグ</div>
+    <div class="ic-sub">エクストラニール 1500mL（1箱＝4袋）</div>
+    <div class="cr">
+      <div class="cr-label">箱数</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('exb',-1)">−</button>
+        <input class="sp-inp" type="number" id="exb" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('exb',1)">＋</button>
+      </div>
+      <div class="sp-unit">箱</div>
+    </div>
+    <div class="cr">
+      <div class="cr-label">端数</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('exu',-1)">−</button>
+        <input class="sp-inp" type="number" id="exu" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('exu',1)">＋</button>
+      </div>
+      <div class="sp-unit">袋</div>
+    </div>
+  </div>
+
+  <div class="ic">
+    <div class="ic-name">キャップキット</div>
+    <div class="ic-sub">つなぐセット（1箱＝30個）</div>
+    <div class="cr">
+      <div class="cr-label">箱数</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('cpb',-1)">−</button>
+        <input class="sp-inp" type="number" id="cpb" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('cpb',1)">＋</button>
+      </div>
+      <div class="sp-unit">箱</div>
+    </div>
+    <div class="cr">
+      <div class="cr-label">端数</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('cpu',-1)">−</button>
+        <input class="sp-inp" type="number" id="cpu" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('cpu',1)">＋</button>
+      </div>
+      <div class="sp-unit">個</div>
+    </div>
+  </div>
+
+  <div class="ic">
+    <div class="ic-name">かぐやセット</div>
+    <div class="ic-sub">ホームPDシステム（1箱＝10セット）</div>
+    <div class="cr">
+      <div class="cr-label">箱数</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('kgb',-1)">−</button>
+        <input class="sp-inp" type="number" id="kgb" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('kgb',1)">＋</button>
+      </div>
+      <div class="sp-unit">箱</div>
+    </div>
+    <div class="cr">
+      <div class="cr-label">端数</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('kgu',-1)">−</button>
+        <input class="sp-inp" type="number" id="kgu" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('kgu',1)">＋</button>
+      </div>
+      <div class="sp-unit">セット</div>
+    </div>
+  </div>
+
+  <div class="ic">
+    <div class="ic-name">排液バッグ</div>
+    <div class="ic-sub">つなぐセット（1箱＝30個）</div>
+    <div class="cr">
+      <div class="cr-label">箱数</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('drb',-1)">−</button>
+        <input class="sp-inp" type="number" id="drb" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('drb',1)">＋</button>
+      </div>
+      <div class="sp-unit">箱</div>
+    </div>
+    <div class="cr">
+      <div class="cr-label">端数</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('dru',-1)">−</button>
+        <input class="sp-inp" type="number" id="dru" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('dru',1)">＋</button>
+      </div>
+      <div class="sp-unit">個</div>
+    </div>
+  </div>
+</div>
+
+<!-- 使用量（最初から開いた状態） -->
+<div class="blk">
+  <div class="blk-title">⚙️ 1日あたりの使用量</div>
+  <p style="font-size:12px;color:#64748b;margin-bottom:12px;">最初に1回だけ設定してください。設定後は変更不要です。</p>
+
+  <div class="ic">
+    <div class="ic-name">レギュニール 2.5</div>
+    <div class="cr" style="margin-top:8px;">
+      <div class="cr-label">使用量</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('d_r25',-1)">−</button>
+        <input class="sp-inp" type="number" id="d_r25" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('d_r25',1)">＋</button>
+      </div>
+      <div class="sp-unit">袋/日</div>
+    </div>
+  </div>
+
+  <div class="ic">
+    <div class="ic-name">レギュニール 4.25</div>
+    <div class="cr" style="margin-top:8px;">
+      <div class="cr-label">使用量</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('d_r4',-1)">−</button>
+        <input class="sp-inp" type="number" id="d_r4" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('d_r4',1)">＋</button>
+      </div>
+      <div class="sp-unit">袋/日</div>
+    </div>
+  </div>
+
+  <div class="ic">
+    <div class="ic-name">UVツインバッグ</div>
+    <div class="cr" style="margin-top:8px;">
+      <div class="cr-label">使用量</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('d_ex',-1)">−</button>
+        <input class="sp-inp" type="number" id="d_ex" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('d_ex',1)">＋</button>
+      </div>
+      <div class="sp-unit">袋/日</div>
+    </div>
+  </div>
+
+  <div class="ic">
+    <div class="ic-name">キャップキット</div>
+    <div class="cr" style="margin-top:8px;">
+      <div class="cr-label">使用量</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('d_cp',-1)">−</button>
+        <input class="sp-inp" type="number" id="d_cp" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('d_cp',1)">＋</button>
+      </div>
+      <div class="sp-unit">個/日</div>
+    </div>
+  </div>
+
+  <div class="ic">
+    <div class="ic-name">かぐやセット</div>
+    <div class="cr" style="margin-top:8px;">
+      <div class="cr-label">使用量</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('d_kg',-1)">−</button>
+        <input class="sp-inp" type="number" id="d_kg" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('d_kg',1)">＋</button>
+      </div>
+      <div class="sp-unit">個/日</div>
+    </div>
+  </div>
+
+  <div class="ic">
+    <div class="ic-name">排液バッグ</div>
+    <div class="cr" style="margin-top:8px;">
+      <div class="cr-label">使用量</div>
+      <div class="sp">
+        <button class="sp-btn" type="button" onclick="adj('d_dr',-1)">−</button>
+        <input class="sp-inp" type="number" id="d_dr" value="0" min="0" inputmode="numeric">
+        <button class="sp-btn" type="button" onclick="adj('d_dr',1)">＋</button>
+      </div>
+      <div class="sp-unit">個/日</div>
+    </div>
+  </div>
+</div>
+
+<!-- 計算ボタン -->
+<button class="calc-btn" type="button" onclick="calc()">📊 在庫数を計算する</button>
+
+<!-- 結果 -->
+<div id="result"></div>
+
+<script>
+var WD = ['日','月','火','水','木','金','土'];
+var today = new Date(); today.setHours(0,0,0,0);
+document.getElementById('today-lbl').textContent =
+  '本日: ' + today.getFullYear() + '年' + (today.getMonth()+1) + '月' + today.getDate() + '日（' + WD[today.getDay()] + '）';
+
+var ALL_IDS = ['r25b','r25u','r4b','r4u','exb','exu','cpb','cpu','kgb','kgu','drb','dru',
+               'd_r25','d_r4','d_ex','d_cp','d_kg','d_dr'];
+
+var ITEMS = [
+  {b:'r25b',u:'r25u',d:'d_r25',n:'レギュニール 2.5', sz:4,  unit:'袋'},
+  {b:'r4b', u:'r4u', d:'d_r4', n:'レギュニール 4.25',sz:4,  unit:'袋'},
+  {b:'exb', u:'exu', d:'d_ex', n:'UVツインバッグ',   sz:4,  unit:'袋'},
+  {b:'cpb', u:'cpu', d:'d_cp', n:'キャップキット',   sz:30, unit:'個'},
+  {b:'kgb', u:'kgu', d:'d_kg', n:'かぐやセット',     sz:10, unit:'セット'},
+  {b:'drb', u:'dru', d:'d_dr', n:'排液バッグ',       sz:30, unit:'個'}
+];
+
+function adj(id, d) {
+  var el = document.getElementById(id);
+  var v = parseInt(el.value) || 0;
+  el.value = Math.max(0, v + d);
+  save();
+}
+
+function runOnce(fn) {
+  var now = Date.now();
+  if (window.__lastPdTap && now - window.__lastPdTap < 160) return;
+  window.__lastPdTap = now;
+  fn();
+}
+
+function bindTap(el, fn) {
+  if (!el) return;
+  var pointerHandled = false;
+  el.addEventListener('pointerup', function(e) {
+    pointerHandled = true;
+    e.preventDefault();
+    runOnce(fn);
+  });
+  el.addEventListener('touchend', function(e) {
+    if (pointerHandled) return;
+    e.preventDefault();
+    runOnce(fn);
+  }, {passive:false});
+  el.addEventListener('click', function(e) {
+    e.preventDefault();
+    runOnce(fn);
+  });
+}
+
+function bindMobileButtons() {
+  document.querySelectorAll('.sp-btn').forEach(function(btn) {
+    var raw = btn.getAttribute('onclick') || '';
+    var m = raw.match(/adj\('([^']+)',\s*(-?\d+)\)/);
+    if (!m) return;
+    var id = m[1];
+    var delta = parseInt(m[2], 10);
+    btn.removeAttribute('onclick');
+    btn.setAttribute('aria-label', (delta > 0 ? '増やす ' : '減らす ') + id);
+    bindTap(btn, function() { adj(id, delta); });
+  });
+
+  document.querySelectorAll('.calc-btn').forEach(function(btn) {
+    btn.removeAttribute('onclick');
+    bindTap(btn, calc);
+  });
+}
+
+function save() {
+  var s = {nd: document.getElementById('nd').value, dd: document.getElementById('dd').value};
+  ALL_IDS.forEach(function(id){ s[id] = document.getElementById(id).value; });
+  try { localStorage.setItem('pd4', JSON.stringify(s)); } catch(e){}
+}
+
+function restore() {
+  var s; try { s = JSON.parse(localStorage.getItem('pd4')||'{}'); } catch(e){ s={}; }
+  ALL_IDS.forEach(function(id){ if(s[id]!=null) document.getElementById(id).value = s[id]; });
+  if(s.nd) document.getElementById('nd').value = s.nd;
+  if(s.dd) document.getElementById('dd').value = s.dd;
+}
+
+function fmt(rem, item) {
+  if(rem < 0) return '不足 '+Math.abs(rem)+item.unit;
+  var b = Math.floor(rem/item.sz), u = rem % item.sz;
+  if(b>0 && u>0) return b+'箱 '+u+item.unit;
+  if(b>0) return b+'箱';
+  return u+item.unit;
+}
+
+function fmtDate(s) {
+  var d = parseDateLocal(s);
+  return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+WD[d.getDay()]+'）';
+}
+
+function parseDateLocal(s) {
+  var p = s.split('-');
+  return new Date(parseInt(p[0],10), parseInt(p[1],10)-1, parseInt(p[2],10));
+}
+
+function makeCard(title, dateStr) {
+  var tgt = parseDateLocal(dateStr); tgt.setHours(0,0,0,0);
+  var days = Math.round((tgt - today) / 86400000);
+  if(days < 0) return '<div class="rc danger"><div class="rc-title danger">'+title+'</div><p style="color:#dc2626;font-size:13px;margin-top:4px;">過去の日付です</p></div>';
+  var bad=false, warn=false, rows='';
+  ITEMS.forEach(function(item){
+    var tot = (parseInt(document.getElementById(item.b).value)||0)*item.sz
+            + (parseInt(document.getElementById(item.u).value)||0);
+    var daily = parseInt(document.getElementById(item.d).value)||0;
+    var rem = tot - daily*days;
+    var cls='ok', icon='✅';
+    if(rem<0){cls='danger';icon='🚨';bad=true;}
+    else if(daily>0 && rem<=daily*2){cls='warn';icon='⚠️';warn=true;}
+    rows += '<div class="rr"><div class="rr-name">'+item.n+'</div><div class="rr-right"><div class="rr-num '+cls+'">'+fmt(rem,item)+'</div><span>'+icon+'</span></div></div>';
+  });
+  var cc = bad?'danger':warn?'warn':'ok';
+  return '<div class="rc '+cc+'"><div class="rc-title '+cc+'">'+title+'</div><div class="rc-date">'+fmtDate(dateStr)+'（今日から'+days+'日後）</div>'+rows+'</div>';
+}
+
+function calc() {
+  save();
+  var nd = document.getElementById('nd').value;
+  var dd = document.getElementById('dd').value;
+  var out = '';
+  if(!nd && !dd){
+    out = '<div class="blk" style="text-align:center;color:#94a3b8;padding:20px;">日付を入力してください</div>';
+    document.getElementById('print-header').textContent = '';
+  } else {
+    var now = new Date();
+    var calcTime = now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日（'+WD[now.getDay()]+'）計算';
+    document.getElementById('print-header').textContent = '📋 在庫確認レポート　' + calcTime;
+    out = '<div class="legend"><span>✅ 在庫十分</span><span>⚠️ 残り少ない</span><span>🚨 不足</span></div>';
+    out += '<div class="share-note">この結果画面をスクショして、家族や訪問看護師さんに共有できます。</div>';
+    if(nd) out += makeCard('👩‍⚕️ 訪問看護師来訪時', nd);
+    if(dd) out += makeCard('🚚 配送日当日', dd);
+    out += '<div id="pdf-btn-wrap"><button class="pdf-btn" type="button" onclick="printPDF()">📄 PDFで保存する</button></div>';
+  }
+  document.getElementById('result').innerHTML = out;
+  setTimeout(function(){ document.getElementById('result').scrollIntoView({behavior:'smooth'}); }, 100);
+}
+
+function printPDF() {
+  window.print();
+}
+
+window.adj = adj;
+window.calc = calc;
+window.printPDF = printPDF;
+
+document.getElementById('nd').addEventListener('change', save);
+document.getElementById('dd').addEventListener('change', save);
+ALL_IDS.forEach(function(id){ document.getElementById(id).addEventListener('input', save); });
+
+restore();
+bindMobileButtons();
+</script>
+</body>
+</html>

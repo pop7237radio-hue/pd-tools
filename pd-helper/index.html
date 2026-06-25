@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="theme-color" content="#0ea5e9">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="PD-Helper">
+    <title>PD-Helper | 腹膜透析管理アシスタント</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Outfit & Noto Sans JP) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            font-size: 20px;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', 'Outfit', sans-serif;
+            background-color: #f0f7ff;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1.65;
+            padding-bottom: calc(96px + env(safe-area-inset-bottom));
+        }
+
+        .max-w-md {
+            max-width: none !important;
+            width: 100% !important;
+        }
+
+        .mx-auto {
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+
+        .px-4 {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
+
+        .pt-6 {
+            padding-top: calc(14px + env(safe-area-inset-top)) !important;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 10px 30px -10px rgba(147, 197, 253, 0.3);
+        }
+
+        .hidden { display: none !important; }
+        .sr-only {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+        .block { display: block !important; }
+        .flex { display: flex !important; }
+        .grid { display: grid !important; }
+        .items-center { align-items: center !important; }
+        .items-start { align-items: flex-start !important; }
+        .justify-center { justify-content: center !important; }
+        .justify-between { justify-content: space-between !important; }
+        .flex-col { flex-direction: column !important; }
+        .flex-1 { flex: 1 1 0% !important; }
+        .flex-shrink-0 { flex-shrink: 0 !important; }
+        .relative { position: relative !important; }
+        .absolute { position: absolute !important; }
+        .overflow-hidden { overflow: hidden !important; }
+        .text-center { text-align: center !important; }
+        .text-right { text-align: right !important; }
+        .font-bold { font-weight: 700 !important; }
+        .font-black { font-weight: 900 !important; }
+        .font-medium { font-weight: 500 !important; }
+        .w-full { width: 100% !important; }
+        .h-full { height: 100% !important; }
+        .min-h-screen { min-height: 100vh !important; }
+        .object-cover { object-fit: cover !important; }
+        .bg-white { background: #fff !important; }
+        .bg-slate-50 { background: #f8fafc !important; }
+        .bg-slate-100 { background: #f1f5f9 !important; }
+        .bg-sky-50 { background: #f0f9ff !important; }
+        .bg-sky-100 { background: #e0f2fe !important; }
+        .bg-sky-500 { background: #0ea5e9 !important; }
+        .bg-red-100 { background: #fee2e2 !important; }
+        .bg-amber-50\/40 { background: #fffbeb !important; }
+        .bg-indigo-50\/40 { background: #eef2ff !important; }
+        .bg-emerald-50\/30 { background: #ecfdf5 !important; }
+        .text-white { color: #fff !important; }
+        .text-slate-900 { color: #0f172a !important; }
+        .text-slate-800 { color: #1e293b !important; }
+        .text-slate-700 { color: #334155 !important; }
+        .text-slate-600 { color: #475569 !important; }
+        .text-slate-500 { color: #64748b !important; }
+        .text-slate-400 { color: #94a3b8 !important; }
+        .text-sky-500 { color: #0ea5e9 !important; }
+        .text-sky-600 { color: #0284c7 !important; }
+        .text-indigo-600 { color: #4f46e5 !important; }
+        .text-rose-500 { color: #f43f5e !important; }
+        .border { border-style: solid !important; border-width: 1px !important; }
+        .border-slate-100 { border-color: #f1f5f9 !important; }
+        .border-slate-200 { border-color: #e2e8f0 !important; }
+        .border-blue-50 { border-color: #eff6ff !important; }
+        .border-sky-100 { border-color: #e0f2fe !important; }
+        .border-t { border-top: 1px solid #e2e8f0 !important; }
+        .border-b { border-bottom: 1px solid #e2e8f0 !important; }
+        .mb-1, .mb-1\.5 { margin-bottom: 6px !important; }
+        .mb-4 { margin-bottom: 16px !important; }
+        .mb-6 { margin-bottom: 18px !important; }
+        .mt-1\.5 { margin-top: 8px !important; }
+        .mt-4 { margin-top: 16px !important; }
+        .mt-8 { margin-top: 24px !important; }
+        .p-2 { padding: 8px !important; }
+        .p-3 { padding: 12px !important; }
+        .p-4 { padding: 16px !important; }
+        .p-5, .p-6 { padding: 18px !important; }
+        .px-2, .px-2\.5, .px-3, .px-4 { padding-left: 12px !important; padding-right: 12px !important; }
+        .py-2, .py-2\.5, .py-3\.5 { padding-top: 12px !important; padding-bottom: 12px !important; }
+        .gap-1\.5 { gap: 8px !important; }
+        .gap-2 { gap: 10px !important; }
+        .gap-3, .gap-4 { gap: 12px !important; }
+        .w-20 { width: 80px !important; }
+        .h-20 { height: 80px !important; }
+
+        header, section {
+            width: 100%;
+            border-radius: 18px !important;
+            padding: 18px !important;
+            margin-bottom: 16px !important;
+        }
+
+        h1, h2, h3 {
+            line-height: 1.35;
+        }
+
+        h2 {
+            font-size: 1.45rem !important;
+            margin: 0 0 18px !important;
+        }
+
+        h3 {
+            font-size: 1.18rem !important;
+            margin: 0 0 12px !important;
+            letter-spacing: 0 !important;
+        }
+
+        p, span, label, button, input {
+            font-size: 1rem;
+        }
+
+        label,
+        .block,
+        .text-xs,
+        .text-\[11px\],
+        .text-\[10px\],
+        .text-sm {
+            font-size: 1rem !important;
+        }
+
+        input[type="number"],
+        input[type="date"],
+        input[type="text"],
+        textarea {
+            width: 100% !important;
+            min-height: 56px;
+            border: 2px solid #cbd5e1 !important;
+            border-radius: 14px !important;
+            background: #fff !important;
+            color: #0f172a !important;
+            font-size: 1.1rem !important;
+            font-weight: 700;
+            padding: 12px 14px !important;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input:focus {
+            outline: 3px solid rgba(14, 165, 233, 0.25);
+            border-color: #0ea5e9 !important;
+        }
+
+        .grid {
+            display: grid;
+        }
+
+        .grid-cols-2,
+        .grid-cols-3 {
+            grid-template-columns: 1fr !important;
+        }
+
+        .grid-cols-4 {
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        }
+
+        .gap-2,
+        .gap-3 {
+            gap: 12px !important;
+        }
+
+        .space-y-6 > * + * {
+            margin-top: 22px !important;
+        }
+
+        .space-y-4 > * + * {
+            margin-top: 16px !important;
+        }
+
+        .rounded-2xl,
+        .rounded-3xl,
+        .rounded-xl {
+            border-radius: 18px !important;
+        }
+
+        .bg-amber-50\/40,
+        .bg-indigo-50\/40,
+        .bg-emerald-50\/30,
+        .bg-slate-100 {
+            padding: 16px !important;
+            border: 2px solid #e2e8f0 !important;
+        }
+
+        input[type="radio"] + div,
+        .peer + div {
+            min-height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem !important;
+            border-width: 2px !important;
+        }
+
+        input[type="radio"]:checked + div {
+            background: #f59e0b !important;
+            color: white !important;
+            border-color: #f59e0b !important;
+        }
+
+        button {
+            min-height: 54px;
+            font-size: 1rem !important;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        button[type="submit"] {
+            position: sticky;
+            bottom: calc(82px + env(safe-area-inset-bottom));
+            z-index: 30;
+            min-height: 64px;
+            border-radius: 18px !important;
+            font-size: 1.12rem !important;
+            box-shadow: 0 10px 24px rgba(14, 165, 233, 0.32);
+        }
+
+        #help-content {
+            font-size: 1rem !important;
+            line-height: 1.75;
+        }
+
+        #sorarin-bubble {
+            font-size: 0.95rem !important;
+        }
+
+        #calc-day-net,
+        #calc-kaguya-net,
+        #calc-total-net {
+            font-size: 1.25rem !important;
+            white-space: nowrap;
+        }
+
+        #history-container {
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        .safe-message {
+            background: #ecfeff;
+            border: 2px solid #bae6fd;
+            border-radius: 16px;
+            color: #075985;
+            padding: 14px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .simple-chart {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            align-items: end;
+            gap: 8px;
+            width: 100%;
+            min-height: 230px;
+            padding: 12px;
+        }
+
+        .simple-chart-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .simple-chart-bar {
+            width: 100%;
+            max-width: 34px;
+            min-height: 6px;
+            border-radius: 999px 999px 6px 6px;
+            background: #38bdf8;
+        }
+
+        .simple-chart-bar.minus {
+            background: #fb7185;
+        }
+
+        .simple-chart-value,
+        .simple-chart-label {
+            font-size: 0.68rem !important;
+            color: #475569;
+            line-height: 1.15;
+            text-align: center;
+            word-break: keep-all;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12 text-slate-800">
+
+    <!-- メインコンテナ (モバイルファースト設計) -->
+    <div class="max-w-md mx-auto px-4 pt-6">
+        
+        <!-- そらりんヘッダー ＆ そらりんエリア -->
+        <header class="bg-white rounded-3xl p-5 mb-6 custom-shadow flex items-center gap-4 relative overflow-hidden border border-blue-50">
+            <!-- 背景に薄いグラデーション装飾 -->
+            <div class="absolute right-0 top-0 w-24 h-24 bg-blue-100 rounded-full filter blur-xl opacity-50 -mr-6 -mt-6"></div>
+            
+            <!-- そらりんマスコット画像 -->
+            <div class="w-20 h-20 rounded-2xl overflow-hidden bg-sky-100 flex-shrink-0 border-2 border-sky-200 relative z-10">
+                <img src="assets/sorarin_mascot.png" alt="そらりん" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.textContent='☆'; this.parentElement.style.fontSize='42px'; this.parentElement.style.alignItems='center'; this.parentElement.style.justifyContent='center';">
+            </div>
+            
+            <!-- 吹き出しメッセージ -->
+            <div class="flex-1 relative z-10">
+                <div class="bg-sky-50 text-sky-900 text-xs rounded-2xl p-3 border border-sky-100 relative">
+                    <!-- 吹き出しの三角 -->
+                    <div class="absolute left-0 top-1/2 transform -translate-x-2 -translate-y-1/2 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-sky-50 border-b-8 border-b-transparent"></div>
+                    <p id="sorarin-bubble" class="font-medium leading-relaxed">今日も無理せず、コツコツいこ！☆</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- 💡 使い方ガイドアコーディオン (使い方がわからない事故を完全に防ぐ) -->
+        <section class="bg-white rounded-3xl p-4 mb-6 custom-shadow border border-blue-50">
+            <button type="button" onclick="toggleHelp()" class="w-full flex justify-between items-center text-sm font-bold text-slate-800 focus:outline-none">
+                <span class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-sky-500 text-base animate-pulse"></i>
+                    初めて使う方へ (スマホ登録・使い方)
+                </span>
+                <i id="help-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+            </button>
+            <div id="help-content" class="hidden mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 space-y-3.5 leading-relaxed">
+                <div>
+                    <span class="font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded">1. スマホのホーム画面に追加する</span>
+                    <p class="mt-1.5 pl-1 text-[11px] text-slate-500">
+                        <strong>iPhone (Safari)</strong>: 下部の「共有ボタン（四角に↑）」→「ホーム画面に追加」を選択。<br>
+                        <strong>Android (Chrome)</strong>: 右上のメニュー（三点リーダー）→「アプリをインストール」または「ホーム画面に追加」を選択。
+                    </p>
+                </div>
+                <div>
+                    <span class="font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded">2. 毎日の記録と保存</span>
+                    <p class="mt-1.5 pl-1 text-[11px] text-slate-500">
+                        手書きノートと同じ項目に数値を入力し、一番下の「データを保存する」を押します。データはスマホ内（ブラウザ）に安全に自動保存されます。
+                    </p>
+                </div>
+                <div>
+                    <span class="font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded">3. 訪問看護師さんや家族へLINE送信</span>
+                    <p class="mt-1.5 pl-1 text-[11px] text-slate-500">
+                        履歴カードの右上にある <strong>コピーボタン（書類マーク 📋）</strong> を押すと、今日の記録がすべてLINE送信用にコピーされます。そのままLINEのメッセージ欄に貼り付けて送信してください。
+                    </p>
+                </div>
+                <div>
+                    <span class="font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded">4. データのバックアップ</span>
+                    <p class="mt-1.5 pl-1 text-[11px] text-slate-500">
+                        機種変更時やキャッシュ消去に備え、週に1回程度、最下部の「書き出し (コピー)」を押して、LINEのマイチャット等にデータを保存しておくことをお勧めします。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- メメインコンポーネント / セクション -->
+        <main class="space-y-6">
+            
+            <!-- 記録入力セクション -->
+            <section class="bg-white rounded-3xl p-6 custom-shadow border border-blue-50">
+                <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-sky-500"></i>
+                    本日の記録
+                </h2>
+                
+                <form id="pd-form" class="space-y-6">
+                    <!-- 日付選択 -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1.5" for="record-date">記録日</label>
+                        <input type="date" id="record-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500">
+                    </div>
+
+                    <!-- 昼間の交換の治療結果 -->
+                    <div class="bg-amber-50/40 rounded-2xl p-4 border border-amber-100/50 space-y-4">
+                        <h3 class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-sun text-amber-500 text-sm"></i>
+                            昼間の交換 (手動)
+                        </h3>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] text-slate-500 mb-1" for="day-fill">注液量 (ml)</label>
+                                <input type="number" id="day-fill" inputmode="numeric" pattern="[0-9]*" step="1" placeholder="1500" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-slate-500 mb-1" for="day-drain">排液量 (ml)</label>
+                                <input type="number" id="day-drain" inputmode="numeric" pattern="[0-9]*" step="1" placeholder="1960" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl bg-white border border-amber-200 px-4 py-3">
+                            <p class="text-[11px] text-slate-500 mb-1">昼間除水量</p>
+                            <p id="day-net-display" class="text-lg font-bold text-sky-600">+0 ml</p>
+                            <p class="text-[10px] text-slate-400 mt-1">排液量 - 注液量で自動計算します</p>
+                        </div>
+                    </div>
+
+                    <!-- 「かぐや」治療結果 -->
+                    <div class="bg-indigo-50/40 rounded-2xl p-4 border border-indigo-100/50 space-y-4">
+                        <h3 class="text-xs font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-moon text-indigo-500 text-sm"></i>
+                            「かぐや」治療結果 (夜間APD)
+                        </h3>
+                        
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1" for="kaguya-total-net">総除水量 (ml)</label>
+                                <input type="number" id="kaguya-total-net" inputmode="decimal" step="1" placeholder="1660" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-indigo-500 font-bold text-indigo-700">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1" for="kaguya-day-net">昼間除水量 (ml)</label>
+                                <input type="number" id="kaguya-day-net" inputmode="decimal" step="1" placeholder="64 / -50" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1" for="kaguya-night-net">夜間除水量 (ml)</label>
+                                <input type="number" id="kaguya-night-net" inputmode="decimal" step="1" placeholder="1596 / -50" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-indigo-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 治療後バイタル＆身体記録 -->
+                    <div class="bg-emerald-50/30 rounded-2xl p-4 border border-emerald-100/50 space-y-4">
+                        <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-heart-pulse text-emerald-500 text-sm"></i>
+                            バイタル＆身体記録 (治療後)
+                        </h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-slate-500 mb-1" for="bp-systolic">血圧 上 (mmHg)</label>
+                                <input type="number" id="bp-systolic" inputmode="numeric" pattern="[0-9]*" placeholder="150" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-500 mb-1" for="bp-diastolic">血圧 下 (mmHg)</label>
+                                <input type="number" id="bp-diastolic" inputmode="numeric" pattern="[0-9]*" placeholder="93" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-[11px] text-slate-500 mb-1" for="body-weight">体重 (kg)</label>
+                                <input type="number" id="body-weight" step="0.1" inputmode="decimal" placeholder="71.5" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-slate-500 mb-1" for="pulse-rate">脈拍 (bpm)</label>
+                                <input type="number" id="pulse-rate" inputmode="numeric" pattern="[0-9]*" placeholder="80" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-slate-500 mb-1" for="body-temperature">体温 (℃)</label>
+                                <input type="number" id="body-temperature" step="0.1" inputmode="decimal" placeholder="36.8" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-emerald-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1" for="spo2">SpO2 (%)</label>
+                            <input type="number" id="spo2" inputmode="numeric" pattern="[0-9]*" placeholder="97" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <!-- 総除水量リアルタイム計算表示 -->
+                    <div class="bg-slate-100 rounded-2xl p-4 border border-slate-200 flex flex-col gap-2">
+                        <div class="flex justify-between items-center text-xs font-semibold text-slate-500">
+                            <span>昼間の除水量:</span>
+                            <span id="calc-day-net" class="font-bold">+0 ml</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs font-semibold text-slate-500">
+                            <span>「かぐや」総除水量:</span>
+                            <span id="calc-kaguya-net" class="font-bold">+0 ml</span>
+                        </div>
+                        <div class="border-t border-slate-200 my-1"></div>
+                        <div class="flex justify-between items-center text-sm font-bold text-slate-900">
+                            <span>一日の総除水量:</span>
+                            <span id="calc-total-net" class="text-sky-600 text-lg font-black">+0 ml</span>
+                        </div>
+                    </div>
+
+                    <!-- 保存ボタン -->
+                    <button type="button" id="save-record-btn" class="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-2xl py-3.5 font-bold transition duration-200 flex items-center justify-center gap-2 custom-shadow">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        この日のデータを保存する
+                    </button>
+                </form>
+            </section>
+
+            <!-- グラフ・視覚化セクション -->
+            <section class="bg-white rounded-3xl p-6 custom-shadow border border-blue-50">
+                <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-sky-500"></i>
+                    過去7日間の推移
+                </h2>
+                <div class="w-full h-48 bg-slate-50 rounded-2xl p-2 border border-slate-100 flex items-center justify-center relative">
+                    <canvas id="pdChart"></canvas>
+                </div>
+            </section>
+
+            <!-- 履歴リストセクション -->
+            <section class="bg-white rounded-3xl p-6 custom-shadow border border-blue-50">
+                <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-list text-sky-500"></i>
+                    直近の履歴
+                </h2>
+                <div id="history-container" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                    <!-- JSで履歴が挿入されます -->
+                    <p class="text-sm text-slate-400 text-center py-6">データがまだありません</p>
+                </div>
+            </section>
+
+            <!-- データ管理 ＆ バックアップセクション -->
+            <section class="bg-white rounded-3xl p-6 custom-shadow border border-blue-50 space-y-4">
+                <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-gears text-sky-500"></i>
+                    データバックアップ
+                </h2>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    データはスマホ本体（ブラウザ）に安全に保存されています。機種変更時や紛失に備えて、定期的にテキストをバックアップしてください。
+                </p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="btn-export" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl py-2.5 transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-file-export"></i>
+                        書き出し (コピー)
+                    </button>
+                    <button id="btn-import" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl py-2.5 transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-file-import"></i>
+                        読み込み (復元)
+                    </button>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- フッタークレジット -->
+        <footer class="mt-8 text-center text-xs text-slate-400 space-y-1">
+            <p>PD-Helper v1.0.0 (MVP)</p>
+            <p>&copy; 2026 ei. Powered by AI and Sorarin.</p>
+        </footer>
+    </div>
+
+    <!-- JSロジック -->
+    <script>
+        // 使い方ヘルプガイドの開閉処理
+        function toggleHelp() {
+            const content = document.getElementById('help-content');
+            const chevron = document.getElementById('help-chevron');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                chevron.classList.add('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            }
+        }
+
+        // そらりんのセリフ集
+        const sorarinQuotes = [
+            "今日も無理せず、マイペースでいこ！☆",
+            "今日の除水量、しっかり記録できたね！偉いっ！",
+            "体調はどう？しんどい時はゆっくり休もうね。",
+            "水分と塩分のコントロール、日々の積み重ねが大事だよ。",
+            "僕がいつも隣で見守ってるからね。がんばろ！",
+            "今日の調子はどう？ちょっとした変化も見逃さないでね。"
+        ];
+
+        // ページロード時にランダムでそらりんのセリフを変更
+        function rotateSorarinQuote() {
+            const index = Math.floor(Math.random() * sorarinQuotes.length);
+            document.getElementById('sorarin-bubble').innerText = sorarinQuotes[index];
+        }
+
+        // 初期設定：日付を本日に設定
+        const dateInput = document.getElementById('record-date');
+        function toLocalDateString(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        const today = toLocalDateString(new Date());
+        dateInput.value = today;
+
+        // 各入力要素の取得
+        // 昼間の交換
+        const dayFillInput = document.getElementById('day-fill');
+        const dayDrainInput = document.getElementById('day-drain');
+        const dayNetDisplay = document.getElementById('day-net-display');
+        
+        // かぐや (夜間APD)
+        const kaguyaTotalNet = document.getElementById('kaguya-total-net');
+        const kaguyaDayNet = document.getElementById('kaguya-day-net');
+        const kaguyaNightNet = document.getElementById('kaguya-night-net');
+
+        // バイタル
+        const bpSystolic = document.getElementById('bp-systolic');
+        const bpDiastolic = document.getElementById('bp-diastolic');
+        const pulseRate = document.getElementById('pulse-rate');
+        const bodyWeight = document.getElementById('body-weight');
+        const bodyTemperature = document.getElementById('body-temperature');
+        const spo2Input = document.getElementById('spo2');
+        
+        // 計算表示先
+        const calcDayNet = document.getElementById('calc-day-net');
+        const calcKaguyaNet = document.getElementById('calc-kaguya-net');
+        const calcTotalNet = document.getElementById('calc-total-net');
+
+        function getDayNet() {
+            return parseSignedInt(dayDrainInput.value) - parseSignedInt(dayFillInput.value);
+        }
+
+        function getKaguyaNetForTotal() {
+            const totalRaw = kaguyaTotalNet.value;
+            if (totalRaw !== null && totalRaw !== undefined && String(totalRaw).trim() !== '') {
+                return parseSignedInt(totalRaw);
+            }
+            return parseSignedInt(kaguyaDayNet.value) + parseSignedInt(kaguyaNightNet.value);
+        }
+
+        // 除水量リアルタイム計算処理
+        function updateLiveCalculation() {
+            // 昼間の除水
+            const dayNet = getDayNet();
+            const daySign = dayNet >= 0 ? '+' : '';
+            dayNetDisplay.innerText = `${daySign}${dayNet} ml`;
+            calcDayNet.innerText = `${daySign}${dayNet} ml`;
+            if (dayNet >= 0) {
+                dayNetDisplay.className = "text-lg font-bold text-sky-600";
+                calcDayNet.className = "text-sky-600 font-bold";
+            } else {
+                dayNetDisplay.className = "text-lg font-bold text-rose-500";
+                calcDayNet.className = "text-rose-500 font-bold";
+            }
+
+            // かぐやの除水
+            const kaguyaNet = getKaguyaNetForTotal();
+            const kagSign = kaguyaNet >= 0 ? '+' : '';
+            calcKaguyaNet.innerText = `${kagSign}${kaguyaNet} ml`;
+            if (kaguyaNet >= 0) {
+                calcKaguyaNet.className = "text-indigo-600 font-bold";
+            } else {
+                calcKaguyaNet.className = "text-rose-500 font-bold";
+            }
+
+            // 一日の総除水
+            const totalNet = dayNet + kaguyaNet;
+            const totSign = totalNet >= 0 ? '+' : '';
+            calcTotalNet.innerText = `${totSign}${totalNet} ml`;
+            if (totalNet >= 0) {
+                calcTotalNet.className = "text-sky-600 text-lg font-black";
+            } else {
+                calcTotalNet.className = "text-rose-500 text-lg font-black";
+            }
+        }
+
+        function bindLiveCalculation() {
+            const fields = [
+                dayFillInput, dayDrainInput, kaguyaTotalNet, kaguyaDayNet, kaguyaNightNet,
+                bpSystolic, bpDiastolic,
+                pulseRate, bodyWeight, bodyTemperature, spo2Input
+            ];
+            fields.forEach(function(field) {
+                if (!field) return;
+                ['input', 'change', 'keyup', 'blur'].forEach(function(eventName) {
+                    field.addEventListener(eventName, updateLiveCalculation);
+                });
+            });
+        }
+
+        bindLiveCalculation();
+
+        // データの取得・保存ロジック (localStorage)
+        function getStorageData() {
+            const raw = localStorage.getItem('pd_helper_records');
+            return raw ? JSON.parse(raw) : {};
+        }
+
+        function saveStorageData(data) {
+            localStorage.setItem('pd_helper_records', JSON.stringify(data));
+        }
+
+        function parseSignedInt(value) {
+            if (value === null || value === undefined || String(value).trim() === '') return 0;
+            const n = parseInt(value, 10);
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function parseSignedIntOrNull(value) {
+            if (value === null || value === undefined || String(value).trim() === '') return null;
+            const n = parseInt(value, 10);
+            return Number.isFinite(n) ? n : null;
+        }
+
+        function saveCurrentRecord() {
+            updateLiveCalculation();
+            const date = dateInput.value;
+            if (!date) return;
+
+            const dayFill = parseSignedInt(dayFillInput.value);
+            const dayDrain = parseSignedInt(dayDrainInput.value);
+            const dayNet = dayDrain - dayFill;
+            const kaguyaNet = getKaguyaNetForTotal();
+            const totalNet = dayNet + kaguyaNet;
+
+            const record = {
+                // 過去互換性用（一日の総除水量）
+                net: totalNet,
+                // 昼間の交換
+                day_fill: dayFill,
+                day_drain: dayDrain,
+                day_net: dayNet,
+                // かぐや
+                kaguya_total_net: kaguyaNet,
+                kaguya_day_net: parseSignedIntOrNull(kaguyaDayNet.value),
+                kaguya_night_net: parseSignedIntOrNull(kaguyaNightNet.value),
+                // バイタル
+                bp_systolic: parseInt(bpSystolic.value) || null,
+                bp_diastolic: parseInt(bpDiastolic.value) || null,
+                pulse: parseInt(pulseRate.value) || null,
+                weight: parseFloat(bodyWeight.value) || null,
+                temperature: parseFloat(bodyTemperature.value) || null,
+                spo2: parseInt(spo2Input.value) || null
+            };
+
+            const data = getStorageData();
+            data[date] = record;
+            saveStorageData(data);
+
+            rotateSorarinQuote();
+            alert("データを保存しました！");
+            
+            // UI更新
+            renderHistory();
+            renderChart();
+        }
+
+        document.getElementById('pd-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveCurrentRecord();
+        });
+
+        document.getElementById('save-record-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            saveCurrentRecord();
+        });
+
+        // 履歴の描画処理
+        function renderHistory() {
+            const container = document.getElementById('history-container');
+            const data = getStorageData();
+            const dates = Object.keys(data).sort().reverse(); // 新しい日付順
+
+            if (dates.length === 0) {
+                container.innerHTML = '<p class="text-sm text-slate-400 text-center py-6">データがまだありません</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            dates.forEach(date => {
+                const r = data[date];
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-4 border border-slate-100 flex flex-col gap-3 transition text-xs relative";
+                
+                const dObj = parseDateLocal(date);
+                const formatD = `${dObj.getMonth()+1}/${dObj.getDate()}`;
+                
+                const totalNet = r.net !== null ? r.net : 0;
+                const totalNetText = `${totalNet >= 0 ? '+' : ''}${totalNet} ml`;
+
+                // 昼間手動透析
+                const dFill = r.day_fill ?? null;
+                const dDrain = r.day_drain ?? null;
+                const dNet = r.day_net ?? 0;
+                const dayFillText = dFill === null ? '注液:未記録' : `注液:${dFill} ml`;
+                const dayDrainText = dDrain === null ? '排液:未記録' : `排液:${dDrain} ml`;
+                const dayText = `${dayFillText} / ${dayDrainText} / 除水:${dNet >= 0 ? '+' : ''}${dNet} ml`;
+
+                // かぐや (夜間APD)
+                let kaguyaText = '未記録';
+                if (r.kaguya_total_net !== null && r.kaguya_total_net !== undefined) {
+                    const kgTotal = r.kaguya_total_net ?? 0;
+                    const kgDay = r.kaguya_day_net ?? 0;
+                    const kgNight = r.kaguya_night_net ?? 0;
+                    kaguyaText = `総除水:${kgTotal >= 0 ? '+' : ''}${kgTotal} ml / 昼:${kgDay >= 0 ? '+' : ''}${kgDay} / 夜:${kgNight >= 0 ? '+' : ''}${kgNight}`;
+                }
+
+                // バイタル
+                const bpText = (r.bp_systolic && r.bp_diastolic) ? `${r.bp_systolic}/${r.bp_diastolic}` : '未記録';
+                const weightText = r.weight ? `${r.weight} kg` : '未記録';
+                const tempText = r.temperature ? `${r.temperature} ℃` : '未記録';
+                const spo2Text = r.spo2 ? `${r.spo2} %` : '未記録';
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="space-y-1">
+                            <div class="text-sm font-bold text-slate-900">${formatD}</div>
+                            <div class="text-slate-400 font-medium">${date}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] text-slate-400 font-normal">一日の総除水量</div>
+                            <span class="${totalNet >= 0 ? 'text-sky-600' : 'text-rose-500'} font-bold text-sm">${totalNetText}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-1.5 bg-white rounded-xl p-2.5 border border-slate-100 text-[11px] text-slate-600">
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-sun text-amber-500 text-[10px]"></i>
+                            <span class="font-bold text-[10px] text-slate-400">昼間:</span>
+                            <span class="font-medium">${dayText}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-moon text-indigo-500 text-[10px]"></i>
+                            <span class="font-bold text-[10px] text-slate-400">夜間:</span>
+                            <span class="font-medium text-slate-500">${kaguyaText}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-4 gap-2 pt-2 border-t border-slate-200/60 text-slate-500 text-[10px]">
+                        <div>
+                            <div class="text-slate-400">血圧</div>
+                            <span class="font-semibold text-slate-700">${bpText}</span>
+                        </div>
+                        <div>
+                            <div class="text-slate-400">体重</div>
+                            <span class="font-semibold text-slate-700">${weightText}</span>
+                        </div>
+                        <div>
+                            <div class="text-slate-400">体温</div>
+                            <span class="font-semibold text-slate-700">${tempText}</span>
+                        </div>
+                        <div>
+                            <div class="text-slate-400">SpO2</div>
+                            <span class="font-semibold text-slate-700">${spo2Text}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- コピーボタン (LINE送信など用) -->
+                    <button onclick="copyToClipboard('${date}')" class="absolute top-2.5 right-9 bg-sky-100 hover:bg-sky-200 text-sky-600 rounded-full w-5 h-5 flex items-center justify-center scale-75 transition" title="LINE送信用にコピー">
+                        <i class="fa-solid fa-copy"></i>
+                    </button>
+                    
+                    <!-- 削除ボタン -->
+                    <button onclick="deleteRecord('${date}')" class="absolute top-2.5 right-2.5 bg-red-100 hover:bg-red-200 text-red-600 rounded-full w-5 h-5 flex items-center justify-center scale-75 transition">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 記録をクリップボードにコピー (訪問看護・LINE送信用)
+        window.copyToClipboard = function(date) {
+            const data = getStorageData();
+            const r = data[date];
+            if (!r) return;
+
+            const dObj = parseDateLocal(date);
+            const formatD = `${dObj.getMonth()+1}/${dObj.getDate()}`;
+            
+            const totalNet = r.net !== null ? r.net : 0;
+            const totalNetText = `${totalNet >= 0 ? '+' : ''}${totalNet} ml`;
+
+            // 昼間手動透析
+            const dFill = r.day_fill ?? null;
+            const dDrain = r.day_drain ?? null;
+            const dNet = r.day_net ?? 0;
+            const dayFillText = dFill === null ? '注液:未記録' : `注液:${dFill} ml`;
+            const dayDrainText = dDrain === null ? '排液:未記録' : `排液:${dDrain} ml`;
+            const dayText = `${dayFillText} / ${dayDrainText} / 除水:${dNet >= 0 ? '+' : ''}${dNet} ml`;
+
+            // かぐや (夜間APD)
+            let kaguyaText = '未記録';
+            if (r.kaguya_total_net !== null && r.kaguya_total_net !== undefined) {
+                const kgTotal = r.kaguya_total_net ?? 0;
+                const kgDay = r.kaguya_day_net ?? 0;
+                const kgNight = r.kaguya_night_net ?? 0;
+                kaguyaText = `総除水:${kgTotal >= 0 ? '+' : ''}${kgTotal} ml / 昼:${kgDay >= 0 ? '+' : ''}${kgDay} ml / 夜:${kgNight >= 0 ? '+' : ''}${kgNight} ml`;
+            }
+
+            // バイタル
+            const bpText = (r.bp_systolic && r.bp_diastolic) ? `${r.bp_systolic}/${r.bp_diastolic} mmHg` : '未記録';
+            const weightText = r.weight ? `${r.weight} kg` : '未記録';
+            const tempText = r.temperature ? `${r.temperature} ℃` : '未記録';
+            const spo2Text = r.spo2 ? `${r.spo2} %` : '未記録';
+            const pulseText = r.pulse ? `${r.pulse} bpm` : '未記録';
+
+            const copyText = `【${formatD} 腹膜透析・バイタル記録】
+■ 昼間の交換 (手動)
+  ${dayText}
+■ 「かぐや」治療結果 (夜間APD)
+  ${kaguyaText}
+■ 一日の総除水量
+  ${totalNetText}
+■ 治療後バイタル
+  血圧: ${bpText}
+  体重: ${weightText}
+  脈拍: ${pulseText}
+  体温: ${tempText}
+  SpO2: ${spo2Text}`;
+
+            navigator.clipboard.writeText(copyText).then(() => {
+                alert(`【${formatD}】の記録をコピーしました！\n訪問看護師さんやご家族のLINEにそのまま貼り付けて送信してください。☆`);
+            }).catch(err => {
+                alert("コピーに失敗しました: " + err);
+            });
+        };
+
+        // 履歴削除
+        window.deleteRecord = function(date) {
+            if(confirm(`${date} の記録を削除してもよろしいですか？`)) {
+                const data = getStorageData();
+                delete data[date];
+                saveStorageData(data);
+                renderHistory();
+                renderChart();
+            }
+        };
+
+        // グラフの描画処理
+        let myChart = null;
+        function parseDateLocal(dateStr) {
+            const parts = dateStr.split('-').map(Number);
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+
+        function getLast7DaysSeries() {
+            const data = getStorageData();
+            const labels = [];
+            const netData = [];
+            const systolicData = [];
+            
+            for(let i=6; i>=0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dStr = toLocalDateString(d);
+                labels.push(`${d.getMonth()+1}/${d.getDate()}`);
+                
+                const rec = data[dStr];
+                netData.push(rec && rec.net !== null ? rec.net : 0);
+                systolicData.push(rec && rec.bp_systolic !== null ? rec.bp_systolic : null);
+            }
+
+            return { labels, netData, systolicData };
+        }
+
+        function renderSimpleChart() {
+            const wrap = document.getElementById('pdChart')?.parentElement;
+            if (!wrap) return;
+            const series = getLast7DaysSeries();
+            const maxAbs = Math.max(1, ...series.netData.map(function(v) { return Math.abs(v || 0); }));
+            const html = series.labels.map(function(label, index) {
+                const value = series.netData[index] || 0;
+                const height = Math.max(6, Math.round((Math.abs(value) / maxAbs) * 150));
+                const sign = value >= 0 ? '+' : '';
+                const cls = value < 0 ? ' minus' : '';
+                return `
+                    <div class="simple-chart-item">
+                        <div class="simple-chart-value">${sign}${value}</div>
+                        <div class="simple-chart-bar${cls}" style="height:${height}px"></div>
+                        <div class="simple-chart-label">${label}</div>
+                    </div>
+                `;
+            }).join('');
+            wrap.innerHTML = '<div class="simple-chart" aria-label="過去7日間の除水量グラフ">' + html + '</div>';
+        }
+
+        function renderChart() {
+            if (typeof Chart === 'undefined') {
+                renderSimpleChart();
+                return;
+            }
+            const canvas = document.getElementById('pdChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const series = getLast7DaysSeries();
+
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: series.labels,
+                    datasets: [
+                        {
+                            label: '除水量 (ml)',
+                            data: series.netData,
+                            backgroundColor: 'rgba(56, 189, 248, 0.6)',
+                            borderColor: 'rgba(56, 189, 248, 1)',
+                            borderWidth: 2,
+                            borderRadius: 6,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '血圧 上 (mmHg)',
+                            data: series.systolicData,
+                            type: 'line',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            yAxisID: 'y1',
+                            spanGaps: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '除水量 (ml)',
+                                font: { size: 9 }
+                            },
+                            grid: { drawOnChartArea: false }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '血圧 (mmHg)',
+                                font: { size: 9 }
+                            },
+                            grid: { drawOnChartArea: false },
+                            min: 60,
+                            max: 180
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { boxWidth: 10, font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // バックアップ・インポート機能
+        document.getElementById('btn-export').addEventListener('click', function() {
+            const dataStr = localStorage.getItem('pd_helper_records');
+            if(!dataStr || dataStr === '{}') {
+                alert("バックアップするデータがありません。");
+                return;
+            }
+            navigator.clipboard.writeText(dataStr).then(() => {
+                alert("バックアップ用データをクリップボードにコピーしました！メモ帳などに保存してください。");
+            }).catch(err => {
+                alert("コピーに失敗しました: " + err);
+            });
+        });
+
+        document.getElementById('btn-import').addEventListener('click', function() {
+            const raw = prompt("バックアップしたJSONテキストを貼り付けてください：");
+            if (!raw) return;
+            try {
+                const parsed = JSON.parse(raw);
+                if (typeof parsed === 'object' && parsed !== null) {
+                    saveStorageData(parsed);
+                    alert("データを正常に復元しました！");
+                    renderHistory();
+                    renderChart();
+                } else {
+                    alert("データの形式が正しくありません。");
+                }
+            } catch(e) {
+                alert("解析に失敗しました。正しいデータを貼り付けてください。");
+            }
+        });
+
+        // 起動処理
+        rotateSorarinQuote();
+        renderHistory();
+        renderChart();
+    </script>
+</body>
+</html>
