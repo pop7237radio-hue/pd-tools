@@ -1,646 +1,1159 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#2563eb">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="透析在庫">
-<title>腹膜透析 在庫管理</title>
-<style>
-html, body {
-  max-width: 100%;
-  overflow-x: hidden;
-  margin: 0; padding: 0;
-}
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body {
-  font-family: 'Hiragino Sans', sans-serif;
-  background: #f0f4f8;
-  color: #1e293b;
-  font-size: 16px;
-  padding-bottom: calc(90px + env(safe-area-inset-bottom));
-  width: 100%;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="theme-color" content="#0ea5e9">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="PD-Helper">
+    <title>PD-Helper | 腹膜透析管理アシスタント</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Outfit & Noto Sans JP) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-/* ヘッダー */
-.hd {
-  background: linear-gradient(135deg, #1e40af, #3b82f6);
-  color: white; text-align: center;
-  padding: calc(18px + env(safe-area-inset-top)) 12px 14px; width: 100%;
-}
-.hd h1 { font-size: 20px; font-weight: bold; margin: 0; }
-.hd .sub { font-size: 12px; margin-top: 4px; opacity: 0.88; }
+        html {
+            font-size: 20px;
+        }
 
-.guide {
-  background: #eff6ff;
-  border: 1.5px solid #bfdbfe;
-  border-radius: 12px;
-  color: #1e3a8a;
-  font-size: 13px;
-  line-height: 1.7;
-  margin: 10px;
-  padding: 12px 14px;
-  width: calc(100% - 20px);
-}
-.guide b { color: #1d4ed8; }
+        body {
+            font-family: 'Noto Sans JP', 'Outfit', sans-serif;
+            background-color: #f0f7ff;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1.65;
+            padding-bottom: calc(96px + env(safe-area-inset-bottom));
+        }
 
-/* ブロック */
-.blk {
-  background: white;
-  margin: 10px;
-  border-radius: 14px;
-  padding: 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  width: calc(100% - 20px);
-}
-.blk-title {
-  font-size: 14px; font-weight: bold; color: #1d4ed8;
-  border-bottom: 2px solid #dbeafe;
-  padding-bottom: 8px; margin-bottom: 14px;
-}
+        .max-w-md {
+            max-width: none !important;
+            width: 100% !important;
+        }
 
-/* 日付 */
-.dg { margin-bottom: 12px; }
-.dg:last-child { margin-bottom: 0; }
-.dg label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 5px; }
-input[type="date"] {
-  width: 100%; padding: 14px 10px; font-size: 17px;
-  border: 2px solid #cbd5e1; border-radius: 10px;
-  background: #f8fafc; color: #1e293b;
-  -webkit-appearance: none; display: block;
-}
+        .mx-auto {
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
 
-/* 物品カード */
-.ic {
-  border: 1.5px solid #e2e8f0; border-radius: 12px;
-  padding: 12px; margin-bottom: 10px; background: #f8fafc;
-}
-.ic:last-child { margin-bottom: 0; }
-.ic-name { font-size: 16px; font-weight: bold; margin-bottom: 1px; }
-.ic-sub  { font-size: 11px; color: #64748b; margin-bottom: 10px; }
+        .px-4 {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
 
-/* カウンター行 */
-.cr {
-  display: flex; align-items: center;
-  margin-bottom: 8px; width: 100%;
-}
-.cr:last-child { margin-bottom: 0; }
-.cr-label { font-size: 13px; color: #475569; width: 56px; flex-shrink: 0; }
+        .pt-6 {
+            padding-top: calc(14px + env(safe-area-inset-top)) !important;
+        }
 
-/* ステッパー */
-.sp { display: flex; align-items: center; flex: 1; min-width: 0; }
-.sp-btn {
-  width: 48px; height: 48px; flex-shrink: 0;
-  background: #e2e8f0; border: none; border-radius: 10px;
-  font-size: 24px; font-weight: bold; color: #1e293b;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  touch-action: manipulation; user-select: none; -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  position: relative;
-  z-index: 2;
-}
-.sp-btn:active { background: #cbd5e1; }
-.sp-inp {
-  flex: 1; min-width: 0;
-  text-align: center; font-size: 24px; font-weight: bold; color: #1e293b;
-  border: 2px solid #cbd5e1; border-radius: 8px;
-  padding: 10px 4px; margin: 0 6px;
-  background: white; -webkit-appearance: none; width: 100%;
-}
-.sp-inp:focus { border-color: #3b82f6; outline: none; }
-.sp-unit { font-size: 13px; color: #64748b; width: 32px; flex-shrink: 0; text-align: left; }
+        .custom-shadow {
+            box-shadow: 0 10px 30px -10px rgba(147, 197, 253, 0.3);
+        }
 
-/* セクション見出し */
-.sec-hd {
-  font-size: 14px; font-weight: bold; color: #374151;
-  background: #f1f5f9; border-radius: 8px;
-  padding: 10px 12px; margin-bottom: 12px;
-}
+        .hidden { display: none !important; }
+        .sr-only {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+        .block { display: block !important; }
+        .flex { display: flex !important; }
+        .grid { display: grid !important; }
+        .items-center { align-items: center !important; }
+        .items-start { align-items: flex-start !important; }
+        .justify-center { justify-content: center !important; }
+        .justify-between { justify-content: space-between !important; }
+        .flex-col { flex-direction: column !important; }
+        .flex-1 { flex: 1 1 0% !important; }
+        .flex-shrink-0 { flex-shrink: 0 !important; }
+        .relative { position: relative !important; }
+        .absolute { position: absolute !important; }
+        .overflow-hidden { overflow: hidden !important; }
+        .text-center { text-align: center !important; }
+        .text-right { text-align: right !important; }
+        .font-bold { font-weight: 700 !important; }
+        .font-black { font-weight: 900 !important; }
+        .font-medium { font-weight: 500 !important; }
+        .w-full { width: 100% !important; }
+        .h-full { height: 100% !important; }
+        .min-h-screen { min-height: 100vh !important; }
+        .object-cover { object-fit: cover !important; }
+        .bg-white { background: #fff !important; }
+        .bg-slate-50 { background: #f8fafc !important; }
+        .bg-slate-100 { background: #f1f5f9 !important; }
+        .bg-sky-50 { background: #f0f9ff !important; }
+        .bg-sky-100 { background: #e0f2fe !important; }
+        .bg-sky-500 { background: #0ea5e9 !important; }
+        .bg-red-100 { background: #fee2e2 !important; }
+        .bg-amber-50\/40 { background: #fffbeb !important; }
+        .bg-indigo-50\/40 { background: #eef2ff !important; }
+        .bg-emerald-50\/30 { background: #ecfdf5 !important; }
+        .text-white { color: #fff !important; }
+        .text-slate-900 { color: #0f172a !important; }
+        .text-slate-800 { color: #1e293b !important; }
+        .text-slate-700 { color: #334155 !important; }
+        .text-slate-600 { color: #475569 !important; }
+        .text-slate-500 { color: #64748b !important; }
+        .text-slate-400 { color: #94a3b8 !important; }
+        .text-sky-500 { color: #0ea5e9 !important; }
+        .text-sky-600 { color: #0284c7 !important; }
+        .text-indigo-600 { color: #4f46e5 !important; }
+        .text-rose-500 { color: #f43f5e !important; }
+        .border { border-style: solid !important; border-width: 1px !important; }
+        .border-slate-100 { border-color: #f1f5f9 !important; }
+        .border-slate-200 { border-color: #e2e8f0 !important; }
+        .border-blue-50 { border-color: #eff6ff !important; }
+        .border-sky-100 { border-color: #e0f2fe !important; }
+        .border-t { border-top: 1px solid #e2e8f0 !important; }
+        .border-b { border-bottom: 1px solid #e2e8f0 !important; }
+        .mb-1, .mb-1\.5 { margin-bottom: 6px !important; }
+        .mb-4 { margin-bottom: 16px !important; }
+        .mb-6 { margin-bottom: 18px !important; }
+        .mt-1\.5 { margin-top: 8px !important; }
+        .mt-4 { margin-top: 16px !important; }
+        .mt-8 { margin-top: 24px !important; }
+        .p-2 { padding: 8px !important; }
+        .p-3 { padding: 12px !important; }
+        .p-4 { padding: 16px !important; }
+        .p-5, .p-6 { padding: 18px !important; }
+        .px-2, .px-2\.5, .px-3, .px-4 { padding-left: 12px !important; padding-right: 12px !important; }
+        .py-2, .py-2\.5, .py-3\.5 { padding-top: 12px !important; padding-bottom: 12px !important; }
+        .gap-1\.5 { gap: 8px !important; }
+        .gap-2 { gap: 10px !important; }
+        .gap-3, .gap-4 { gap: 12px !important; }
+        .w-20 { width: 80px !important; }
+        .h-20 { height: 80px !important; }
 
-/* 計算ボタン */
-.calc-btn {
-  display: block; width: calc(100% - 20px);
-  position: sticky;
-  bottom: calc(86px + env(safe-area-inset-bottom));
-  z-index: 30;
-  margin: 0 10px 12px;
-  padding: 16px; background: #2563eb; color: white;
-  border: none; border-radius: 14px;
-  font-size: 17px; font-weight: bold;
-  cursor: pointer; text-align: center;
-  box-shadow: 0 4px 14px rgba(37,99,235,0.3);
-  touch-action: manipulation;
-  user-select: none; -webkit-user-select: none;
-  -webkit-touch-callout: none;
-}
-.calc-btn:active { background: #1d4ed8; }
+        header, section {
+            width: 100%;
+            border-radius: 18px !important;
+            padding: 18px !important;
+            margin-bottom: 16px !important;
+        }
 
-/* 結果カード */
-.rc {
-  border-radius: 14px; padding: 16px;
-  margin: 0 10px 10px; width: calc(100% - 20px);
-}
-.rc.ok     { background: #f0fdf4; border: 2px solid #86efac; }
-.rc.warn   { background: #fffbeb; border: 2px solid #fbbf24; }
-.rc.danger { background: #fef2f2; border: 2px solid #f87171; }
-.rc-title  { font-size: 15px; font-weight: bold; margin-bottom: 3px; }
-.rc-title.ok     { color: #15803d; }
-.rc-title.warn   { color: #92400e; }
-.rc-title.danger { color: #dc2626; }
-.rc-date { font-size: 12px; color: #64748b; margin-bottom: 10px; }
-.rr {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 9px 0; border-bottom: 1px solid rgba(0,0,0,0.07);
-}
-.rr:last-child { border-bottom: none; }
-.rr-name { font-size: 14px; color: #334155; flex: 1; }
-.rr-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
-.rr-num { font-size: 16px; font-weight: bold; }
-.rr-num.ok     { color: #15803d; }
-.rr-num.warn   { color: #92400e; }
-.rr-num.danger { color: #dc2626; }
+        h1, h2, h3 {
+            line-height: 1.35;
+        }
 
-.legend {
-  display: flex; gap: 12px; flex-wrap: wrap;
-  font-size: 12px; color: #64748b;
-  background: white; border-radius: 10px;
-  padding: 10px 14px; margin: 0 10px 10px;
-  width: calc(100% - 20px);
-}
+        h2 {
+            font-size: 1.45rem !important;
+            margin: 0 0 18px !important;
+        }
 
-/* PDFボタン */
-.pdf-btn {
-  display: block; width: calc(100% - 20px);
-  margin: 0 10px 20px;
-  padding: 14px; background: #16a34a; color: white;
-  border: none; border-radius: 14px;
-  font-size: 16px; font-weight: bold;
-  cursor: pointer; text-align: center;
-  box-shadow: 0 4px 14px rgba(22,163,74,0.3);
-  touch-action: manipulation;
-}
-.pdf-btn:active { background: #15803d; }
+        h3 {
+            font-size: 1.18rem !important;
+            margin: 0 0 12px !important;
+            letter-spacing: 0 !important;
+        }
 
-.share-note {
-  background: #eef2ff;
-  border: 1px solid #c7d2fe;
-  border-radius: 12px;
-  color: #3730a3;
-  font-size: 12px;
-  line-height: 1.6;
-  margin: 0 10px 10px;
-  padding: 10px 12px;
-  width: calc(100% - 20px);
-}
+        p, span, label, button, input {
+            font-size: 1rem;
+        }
 
-/* 印刷専用エリア */
-#print-header { display: none; }
+        label,
+        .block,
+        .text-xs,
+        .text-\[11px\],
+        .text-\[10px\],
+        .text-sm {
+            font-size: 1rem !important;
+        }
 
-/* 印刷・PDF保存用スタイル */
-@media print {
-  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  body { background: white; padding: 0; font-size: 13px; }
-  .blk, .calc-btn, .legend, #pdf-btn-wrap { display: none !important; }
-  #print-header {
-    display: block !important;
-    text-align: center; padding: 12px;
-    font-size: 13px; color: #475569;
-    border-bottom: 2px solid #dbeafe; margin-bottom: 8px;
-  }
-  .hd {
-    background: linear-gradient(135deg, #1e40af, #3b82f6) !important;
-    padding: 14px 12px !important;
-  }
-  .rc {
-    margin: 8px 0 !important; width: 100% !important;
-    break-inside: avoid; page-break-inside: avoid;
-  }
-  .rc.ok     { background: #f0fdf4 !important; border: 2px solid #86efac !important; }
-  .rc.warn   { background: #fffbeb !important; border: 2px solid #fbbf24 !important; }
-  .rc.danger { background: #fef2f2 !important; border: 2px solid #f87171 !important; }
-  #result { padding: 0 8px; }
-}
-</style>
+        input[type="number"],
+        input[type="date"],
+        input[type="text"],
+        textarea {
+            width: 100% !important;
+            min-height: 56px;
+            border: 2px solid #cbd5e1 !important;
+            border-radius: 14px !important;
+            background: #fff !important;
+            color: #0f172a !important;
+            font-size: 1.1rem !important;
+            font-weight: 700;
+            padding: 12px 14px !important;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input:focus {
+            outline: 3px solid rgba(14, 165, 233, 0.25);
+            border-color: #0ea5e9 !important;
+        }
+
+        .grid {
+            display: grid;
+        }
+
+        .grid-cols-2,
+        .grid-cols-3 {
+            grid-template-columns: 1fr !important;
+        }
+
+        .grid-cols-4 {
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        }
+
+        .gap-2,
+        .gap-3 {
+            gap: 12px !important;
+        }
+
+        .space-y-6 > * + * {
+            margin-top: 22px !important;
+        }
+
+        .space-y-4 > * + * {
+            margin-top: 16px !important;
+        }
+
+        .rounded-2xl,
+        .rounded-3xl,
+        .rounded-xl {
+            border-radius: 18px !important;
+        }
+
+        .bg-amber-50\/40,
+        .bg-indigo-50\/40,
+        .bg-emerald-50\/30,
+        .bg-slate-100 {
+            padding: 16px !important;
+            border: 2px solid #e2e8f0 !important;
+        }
+
+        input[type="radio"] + div,
+        .peer + div {
+            min-height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem !important;
+            border-width: 2px !important;
+        }
+
+        input[type="radio"]:checked + div {
+            background: #f59e0b !important;
+            color: white !important;
+            border-color: #f59e0b !important;
+        }
+
+        button {
+            min-height: 54px;
+            font-size: 1rem !important;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        button[type="submit"] {
+            position: sticky;
+            bottom: calc(82px + env(safe-area-inset-bottom));
+            z-index: 30;
+            min-height: 64px;
+            border-radius: 18px !important;
+            font-size: 1.12rem !important;
+            box-shadow: 0 10px 24px rgba(14, 165, 233, 0.32);
+        }
+
+        #help-content {
+            font-size: 1rem !important;
+            line-height: 1.75;
+        }
+
+        #sorarin-bubble {
+            font-size: 0.95rem !important;
+        }
+
+        #calc-day-net,
+        #calc-kaguya-net,
+        #calc-total-net {
+            font-size: 1.25rem !important;
+            white-space: nowrap;
+        }
+
+        #history-container {
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        .safe-message {
+            background: #ecfeff;
+            border: 2px solid #bae6fd;
+            border-radius: 16px;
+            color: #075985;
+            padding: 14px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .simple-chart {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            align-items: end;
+            gap: 8px;
+            width: 100%;
+            min-height: 230px;
+            padding: 12px;
+        }
+
+        .simple-chart-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .simple-chart-bar {
+            width: 100%;
+            max-width: 34px;
+            min-height: 6px;
+            border-radius: 999px 999px 6px 6px;
+            background: #38bdf8;
+        }
+
+        .simple-chart-bar.minus {
+            background: #fb7185;
+        }
+
+        .simple-chart-value,
+        .simple-chart-label {
+            font-size: 0.68rem !important;
+            color: #475569;
+            line-height: 1.15;
+            text-align: center;
+            word-break: keep-all;
+        }
+    </style>
 </head>
-<body>
+<body class="min-h-screen pb-12 text-slate-800">
 
-<div class="hd">
-  <h1>🩺 腹膜透析 在庫管理</h1>
-  <div class="sub" id="today-lbl"></div>
-</div>
-<div id="print-header"></div>
+    <!-- メインコンテナ (モバイルファースト設計) -->
+    <div class="max-w-md mx-auto px-4 pt-6">
+        
+        <!-- そらりんヘッダー ＆ そらりんエリア -->
+        <header class="bg-white rounded-3xl p-5 mb-6 custom-shadow flex items-center gap-4 relative overflow-hidden border border-blue-50">
+            <!-- 背景に薄いグラデーション装飾 -->
+            <div class="absolute right-0 top-0 w-24 h-24 bg-blue-100 rounded-full filter blur-xl opacity-50 -mr-6 -mt-6"></div>
+            
+            <!-- そらりんマスコット画像 -->
+            <div class="w-20 h-20 rounded-2xl overflow-hidden bg-sky-100 flex-shrink-0 border-2 border-sky-200 relative z-10">
+                <img src="assets/sorarin_mascot.png" alt="そらりん" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.textContent='☆'; this.parentElement.style.fontSize='42px'; this.parentElement.style.alignItems='center'; this.parentElement.style.justifyContent='center';">
+            </div>
+            
+            <!-- 吹き出しメッセージ -->
+            <div class="flex-1 relative z-10">
+                <div class="bg-sky-50 text-sky-900 text-xs rounded-2xl p-3 border border-sky-100 relative">
+                    <!-- 吹き出しの三角 -->
+                    <div class="absolute left-0 top-1/2 transform -translate-x-2 -translate-y-1/2 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-sky-50 border-b-8 border-b-transparent"></div>
+                    <p id="sorarin-bubble" class="font-medium leading-relaxed">今日も無理せず、コツコツいこ！☆</p>
+                </div>
+            </div>
+        </header>
 
-<div class="guide">
-  <b>使い方</b><br>
-  1. 訪問看護師さんが来る日と配送日を入れる<br>
-  2. いま家にある箱数・端数を入れる<br>
-  3. 1日あたりの使用量を確認して「在庫数を計算する」<br>
-  入力した内容は、このブラウザ内に自動保存されます。
-</div>
+        <!-- 💡 使い方ガイドアコーディオン (使い方がわからない事故を完全に防ぐ) -->
+        <section class="bg-white rounded-3xl p-4 mb-6 custom-shadow border border-blue-50">
+            <button type="button" onclick="toggleHelp()" class="w-full flex justify-between items-center text-sm font-bold text-slate-800 focus:outline-none">
+                <span class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-sky-500 text-base animate-pulse"></i>
+                    初めて使う方へ (スマホ登録・使い方)
+                </span>
+                <i id="help-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+            </button>
+            <div id="help-content" class="hidden mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 space-y-3.5 leading-relaxed">
+                <div>
+                    <span class="font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded">1. スマホのホーム画面に追加する</span>
+                    <p class="mt-1.5 pl-1 text-[11px] text-slate-500">
+                        <strong>iPhone (Safari)</strong>: 下部の「共有ボタン（四角に↑）」→「ホーム画面に追加」を選択。<br>
+                        <strong>Android (Chrome)</strong>: 右上のメニュー（三点リーダー）→「アプリをインストール」または「ホーム画面に追加」を選択。
+                    </p>
+                </div>
+                <div>
+                    <span class="font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded">2. 毎日の記録と保存</span>
+                    <p class="mt-1.5 pl-1 text-[11px] text-slate-500">
+                        手書きノートと同じ項目に数値を入力し、一番下の「データを保存する」を押します。データはスマホ内（ブラウザ）に安全に自動保存されます。
+                    </p>
+                </div>
+                <div>
+                    <span class="font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded">3. 訪問看護師さんや家族へLINE送信</span>
+                    <p class="mt-1.5 pl-1 text-[11px] text-slate-500">
+                        履歴カードの右上にある <strong>コピーボタン（書類マーク 📋）</strong> を押すと、今日の記録がすべてLINE送信用にコピーされます。そのままLINEのメッセージ欄に貼り付けて送信してください。
+                    </p>
+                </div>
+                <div>
+                    <span class="font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded">4. データのバックアップ</span>
+                    <p class="mt-1.5 pl-1 text-[11px] text-slate-500">
+                        機種変更時やキャッシュ消去に備え、週に1回程度、最下部の「書き出し (コピー)」を押して、LINEのマイチャット等にデータを保存しておくことをお勧めします。
+                    </p>
+                </div>
+            </div>
+        </section>
 
-<!-- 日付 -->
-<div class="blk">
-  <div class="blk-title">📅 日付を入力してください</div>
-  <div class="dg">
-    <label>👩‍⚕️ 訪問看護師が来る日</label>
-    <input type="date" id="nd">
-  </div>
-  <div class="dg">
-    <label>🚚 病院から配送される日</label>
-    <input type="date" id="dd">
-  </div>
-</div>
+        <!-- メメインコンポーネント / セクション -->
+        <main class="space-y-6">
+            
+            <!-- 記録入力セクション -->
+            <section class="bg-white rounded-3xl p-6 custom-shadow border border-blue-50">
+                <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-sky-500"></i>
+                    本日の記録
+                </h2>
+                
+                <form id="pd-form" class="space-y-6">
+                    <!-- 日付選択 -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1.5" for="record-date">記録日</label>
+                        <input type="date" id="record-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500">
+                    </div>
 
-<!-- 在庫入力 -->
-<div class="blk">
-  <div class="blk-title">📦 現在の在庫数を入力</div>
+                    <!-- 昼間の交換の治療結果 -->
+                    <div class="bg-amber-50/40 rounded-2xl p-4 border border-amber-100/50 space-y-4">
+                        <h3 class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-sun text-amber-500 text-sm"></i>
+                            昼間の交換 (手動)
+                        </h3>
 
-  <div class="ic">
-    <div class="ic-name">レギュニール 2.5</div>
-    <div class="ic-sub">2500mL（1箱＝4袋）</div>
-    <div class="cr">
-      <div class="cr-label">箱数</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('r25b',-1)">−</button>
-        <input class="sp-inp" type="number" id="r25b" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('r25b',1)">＋</button>
-      </div>
-      <div class="sp-unit">箱</div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] text-slate-500 mb-1" for="day-fill">注液量 (ml)</label>
+                                <input type="number" id="day-fill" inputmode="numeric" pattern="[0-9]*" step="1" placeholder="1500" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-slate-500 mb-1" for="day-drain">排液量 (ml)</label>
+                                <input type="number" id="day-drain" inputmode="numeric" pattern="[0-9]*" step="1" placeholder="1960" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl bg-white border border-amber-200 px-4 py-3">
+                            <p class="text-[11px] text-slate-500 mb-1">昼間除水量</p>
+                            <p id="day-net-display" class="text-lg font-bold text-sky-600">+0 ml</p>
+                            <p class="text-[10px] text-slate-400 mt-1">排液量 - 注液量で自動計算します</p>
+                        </div>
+                    </div>
+
+                    <!-- 「かぐや」治療結果 -->
+                    <div class="bg-indigo-50/40 rounded-2xl p-4 border border-indigo-100/50 space-y-4">
+                        <h3 class="text-xs font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-moon text-indigo-500 text-sm"></i>
+                            「かぐや」治療結果 (夜間APD)
+                        </h3>
+                        
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1" for="kaguya-total-net">総除水量 (ml)</label>
+                                <div class="flex gap-1">
+                                    <input type="text" id="kaguya-total-net" inputmode="decimal" pattern="-?[0-9]*" placeholder="1660" class="w-full min-w-0 bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-indigo-500 font-bold text-indigo-700">
+                                    <button type="button" data-sign-toggle="kaguya-total-net" class="shrink-0 min-w-[42px] rounded-xl border-2 border-indigo-200 bg-white px-2 py-2 text-xs font-black text-indigo-700 active:bg-indigo-50" aria-label="総除水量のプラスとマイナスを切り替え">±</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1" for="kaguya-day-net">昼間除水量 (ml)</label>
+                                <div class="flex gap-1">
+                                    <input type="text" id="kaguya-day-net" inputmode="decimal" pattern="-?[0-9]*" placeholder="64 / -50" class="w-full min-w-0 bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-indigo-500">
+                                    <button type="button" data-sign-toggle="kaguya-day-net" class="shrink-0 min-w-[42px] rounded-xl border-2 border-indigo-200 bg-white px-2 py-2 text-xs font-black text-indigo-700 active:bg-indigo-50" aria-label="昼間除水量のプラスとマイナスを切り替え">±</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-500 mb-1" for="kaguya-night-net">夜間除水量 (ml)</label>
+                                <div class="flex gap-1">
+                                    <input type="text" id="kaguya-night-net" inputmode="decimal" pattern="-?[0-9]*" placeholder="1596 / -50" class="w-full min-w-0 bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-indigo-500">
+                                    <button type="button" data-sign-toggle="kaguya-night-net" class="shrink-0 min-w-[42px] rounded-xl border-2 border-indigo-200 bg-white px-2 py-2 text-xs font-black text-indigo-700 active:bg-indigo-50" aria-label="夜間除水量のプラスとマイナスを切り替え">±</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 治療後バイタル＆身体記録 -->
+                    <div class="bg-emerald-50/30 rounded-2xl p-4 border border-emerald-100/50 space-y-4">
+                        <h3 class="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-heart-pulse text-emerald-500 text-sm"></i>
+                            バイタル＆身体記録 (治療後)
+                        </h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-slate-500 mb-1" for="bp-systolic">血圧 上 (mmHg)</label>
+                                <input type="number" id="bp-systolic" inputmode="numeric" pattern="[0-9]*" placeholder="150" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-500 mb-1" for="bp-diastolic">血圧 下 (mmHg)</label>
+                                <input type="number" id="bp-diastolic" inputmode="numeric" pattern="[0-9]*" placeholder="93" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-[11px] text-slate-500 mb-1" for="body-weight">体重 (kg)</label>
+                                <input type="number" id="body-weight" step="0.1" inputmode="decimal" placeholder="71.5" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-slate-500 mb-1" for="pulse-rate">脈拍 (bpm)</label>
+                                <input type="number" id="pulse-rate" inputmode="numeric" pattern="[0-9]*" placeholder="80" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-slate-500 mb-1" for="body-temperature">体温 (℃)</label>
+                                <input type="number" id="body-temperature" step="0.1" inputmode="decimal" placeholder="36.8" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-emerald-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1" for="spo2">SpO2 (%)</label>
+                            <input type="number" id="spo2" inputmode="numeric" pattern="[0-9]*" placeholder="97" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <!-- 総除水量リアルタイム計算表示 -->
+                    <div class="bg-slate-100 rounded-2xl p-4 border border-slate-200 flex flex-col gap-2">
+                        <div class="flex justify-between items-center text-xs font-semibold text-slate-500">
+                            <span>昼間の除水量:</span>
+                            <span id="calc-day-net" class="font-bold">+0 ml</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs font-semibold text-slate-500">
+                            <span>「かぐや」総除水量:</span>
+                            <span id="calc-kaguya-net" class="font-bold">+0 ml</span>
+                        </div>
+                        <div class="border-t border-slate-200 my-1"></div>
+                        <div class="flex justify-between items-center text-sm font-bold text-slate-900">
+                            <span>一日の総除水量:</span>
+                            <span id="calc-total-net" class="text-sky-600 text-lg font-black">+0 ml</span>
+                        </div>
+                    </div>
+
+                    <!-- 保存ボタン -->
+                    <button type="button" id="save-record-btn" class="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-2xl py-3.5 font-bold transition duration-200 flex items-center justify-center gap-2 custom-shadow">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        この日のデータを保存する
+                    </button>
+                </form>
+            </section>
+
+            <!-- グラフ・視覚化セクション -->
+            <section class="bg-white rounded-3xl p-6 custom-shadow border border-blue-50">
+                <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-sky-500"></i>
+                    過去7日間の推移
+                </h2>
+                <div class="w-full h-48 bg-slate-50 rounded-2xl p-2 border border-slate-100 flex items-center justify-center relative">
+                    <canvas id="pdChart"></canvas>
+                </div>
+            </section>
+
+            <!-- 履歴リストセクション -->
+            <section class="bg-white rounded-3xl p-6 custom-shadow border border-blue-50">
+                <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-list text-sky-500"></i>
+                    直近の履歴
+                </h2>
+                <div id="history-container" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                    <!-- JSで履歴が挿入されます -->
+                    <p class="text-sm text-slate-400 text-center py-6">データがまだありません</p>
+                </div>
+            </section>
+
+            <!-- データ管理 ＆ バックアップセクション -->
+            <section class="bg-white rounded-3xl p-6 custom-shadow border border-blue-50 space-y-4">
+                <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-gears text-sky-500"></i>
+                    データバックアップ
+                </h2>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    データはスマホ本体（ブラウザ）に安全に保存されています。機種変更時や紛失に備えて、定期的にテキストをバックアップしてください。
+                </p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="btn-export" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl py-2.5 transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-file-export"></i>
+                        書き出し (コピー)
+                    </button>
+                    <button id="btn-import" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl py-2.5 transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-file-import"></i>
+                        読み込み (復元)
+                    </button>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- フッタークレジット -->
+        <footer class="mt-8 text-center text-xs text-slate-400 space-y-1">
+            <p>PD-Helper v1.0.0 (MVP)</p>
+            <p>&copy; 2026 ei. Powered by AI and Sorarin.</p>
+        </footer>
     </div>
-    <div class="cr">
-      <div class="cr-label">端数</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('r25u',-1)">−</button>
-        <input class="sp-inp" type="number" id="r25u" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('r25u',1)">＋</button>
-      </div>
-      <div class="sp-unit">袋</div>
-    </div>
-  </div>
 
-  <div class="ic">
-    <div class="ic-name">レギュニール 4.25</div>
-    <div class="ic-sub">2000mL（1箱＝4袋）</div>
-    <div class="cr">
-      <div class="cr-label">箱数</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('r4b',-1)">−</button>
-        <input class="sp-inp" type="number" id="r4b" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('r4b',1)">＋</button>
-      </div>
-      <div class="sp-unit">箱</div>
-    </div>
-    <div class="cr">
-      <div class="cr-label">端数</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('r4u',-1)">−</button>
-        <input class="sp-inp" type="number" id="r4u" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('r4u',1)">＋</button>
-      </div>
-      <div class="sp-unit">袋</div>
-    </div>
-  </div>
+    <!-- JSロジック -->
+    <script>
+        // 使い方ヘルプガイドの開閉処理
+        function toggleHelp() {
+            const content = document.getElementById('help-content');
+            const chevron = document.getElementById('help-chevron');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                chevron.classList.add('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            }
+        }
 
-  <div class="ic">
-    <div class="ic-name">UVツインバッグ</div>
-    <div class="ic-sub">エクストラニール 1500mL（1箱＝4袋）</div>
-    <div class="cr">
-      <div class="cr-label">箱数</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('exb',-1)">−</button>
-        <input class="sp-inp" type="number" id="exb" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('exb',1)">＋</button>
-      </div>
-      <div class="sp-unit">箱</div>
-    </div>
-    <div class="cr">
-      <div class="cr-label">端数</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('exu',-1)">−</button>
-        <input class="sp-inp" type="number" id="exu" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('exu',1)">＋</button>
-      </div>
-      <div class="sp-unit">袋</div>
-    </div>
-  </div>
+        // そらりんのセリフ集
+        const sorarinQuotes = [
+            "今日も無理せず、マイペースでいこ！☆",
+            "今日の除水量、しっかり記録できたね！偉いっ！",
+            "体調はどう？しんどい時はゆっくり休もうね。",
+            "水分と塩分のコントロール、日々の積み重ねが大事だよ。",
+            "僕がいつも隣で見守ってるからね。がんばろ！",
+            "今日の調子はどう？ちょっとした変化も見逃さないでね。"
+        ];
 
-  <div class="ic">
-    <div class="ic-name">キャップキット</div>
-    <div class="ic-sub">つなぐセット（1箱＝30個）</div>
-    <div class="cr">
-      <div class="cr-label">箱数</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('cpb',-1)">−</button>
-        <input class="sp-inp" type="number" id="cpb" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('cpb',1)">＋</button>
-      </div>
-      <div class="sp-unit">箱</div>
-    </div>
-    <div class="cr">
-      <div class="cr-label">端数</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('cpu',-1)">−</button>
-        <input class="sp-inp" type="number" id="cpu" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('cpu',1)">＋</button>
-      </div>
-      <div class="sp-unit">個</div>
-    </div>
-  </div>
+        // ページロード時にランダムでそらりんのセリフを変更
+        function rotateSorarinQuote() {
+            const index = Math.floor(Math.random() * sorarinQuotes.length);
+            document.getElementById('sorarin-bubble').innerText = sorarinQuotes[index];
+        }
 
-  <div class="ic">
-    <div class="ic-name">かぐやセット</div>
-    <div class="ic-sub">ホームPDシステム（1箱＝10セット）</div>
-    <div class="cr">
-      <div class="cr-label">箱数</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('kgb',-1)">−</button>
-        <input class="sp-inp" type="number" id="kgb" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('kgb',1)">＋</button>
-      </div>
-      <div class="sp-unit">箱</div>
-    </div>
-    <div class="cr">
-      <div class="cr-label">端数</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('kgu',-1)">−</button>
-        <input class="sp-inp" type="number" id="kgu" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('kgu',1)">＋</button>
-      </div>
-      <div class="sp-unit">セット</div>
-    </div>
-  </div>
+        // 初期設定：日付を本日に設定
+        const dateInput = document.getElementById('record-date');
+        function toLocalDateString(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
 
-  <div class="ic">
-    <div class="ic-name">排液バッグ</div>
-    <div class="ic-sub">つなぐセット（1箱＝30個）</div>
-    <div class="cr">
-      <div class="cr-label">箱数</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('drb',-1)">−</button>
-        <input class="sp-inp" type="number" id="drb" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('drb',1)">＋</button>
-      </div>
-      <div class="sp-unit">箱</div>
-    </div>
-    <div class="cr">
-      <div class="cr-label">端数</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('dru',-1)">−</button>
-        <input class="sp-inp" type="number" id="dru" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('dru',1)">＋</button>
-      </div>
-      <div class="sp-unit">個</div>
-    </div>
-  </div>
-</div>
+        const today = toLocalDateString(new Date());
+        dateInput.value = today;
 
-<!-- 使用量（最初から開いた状態） -->
-<div class="blk">
-  <div class="blk-title">⚙️ 1日あたりの使用量</div>
-  <p style="font-size:12px;color:#64748b;margin-bottom:12px;">最初に1回だけ設定してください。設定後は変更不要です。</p>
+        // 各入力要素の取得
+        // 昼間の交換
+        const dayFillInput = document.getElementById('day-fill');
+        const dayDrainInput = document.getElementById('day-drain');
+        const dayNetDisplay = document.getElementById('day-net-display');
+        
+        // かぐや (夜間APD)
+        const kaguyaTotalNet = document.getElementById('kaguya-total-net');
+        const kaguyaDayNet = document.getElementById('kaguya-day-net');
+        const kaguyaNightNet = document.getElementById('kaguya-night-net');
 
-  <div class="ic">
-    <div class="ic-name">レギュニール 2.5</div>
-    <div class="cr" style="margin-top:8px;">
-      <div class="cr-label">使用量</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('d_r25',-1)">−</button>
-        <input class="sp-inp" type="number" id="d_r25" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('d_r25',1)">＋</button>
-      </div>
-      <div class="sp-unit">袋/日</div>
-    </div>
-  </div>
+        // バイタル
+        const bpSystolic = document.getElementById('bp-systolic');
+        const bpDiastolic = document.getElementById('bp-diastolic');
+        const pulseRate = document.getElementById('pulse-rate');
+        const bodyWeight = document.getElementById('body-weight');
+        const bodyTemperature = document.getElementById('body-temperature');
+        const spo2Input = document.getElementById('spo2');
+        
+        // 計算表示先
+        const calcDayNet = document.getElementById('calc-day-net');
+        const calcKaguyaNet = document.getElementById('calc-kaguya-net');
+        const calcTotalNet = document.getElementById('calc-total-net');
 
-  <div class="ic">
-    <div class="ic-name">レギュニール 4.25</div>
-    <div class="cr" style="margin-top:8px;">
-      <div class="cr-label">使用量</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('d_r4',-1)">−</button>
-        <input class="sp-inp" type="number" id="d_r4" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('d_r4',1)">＋</button>
-      </div>
-      <div class="sp-unit">袋/日</div>
-    </div>
-  </div>
+        function getDayNet() {
+            return parseSignedInt(dayDrainInput.value) - parseSignedInt(dayFillInput.value);
+        }
 
-  <div class="ic">
-    <div class="ic-name">UVツインバッグ</div>
-    <div class="cr" style="margin-top:8px;">
-      <div class="cr-label">使用量</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('d_ex',-1)">−</button>
-        <input class="sp-inp" type="number" id="d_ex" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('d_ex',1)">＋</button>
-      </div>
-      <div class="sp-unit">袋/日</div>
-    </div>
-  </div>
+        function getKaguyaNetForTotal() {
+            const totalRaw = kaguyaTotalNet.value;
+            if (totalRaw !== null && totalRaw !== undefined && String(totalRaw).trim() !== '') {
+                return parseSignedInt(totalRaw);
+            }
+            return parseSignedInt(kaguyaDayNet.value) + parseSignedInt(kaguyaNightNet.value);
+        }
 
-  <div class="ic">
-    <div class="ic-name">キャップキット</div>
-    <div class="cr" style="margin-top:8px;">
-      <div class="cr-label">使用量</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('d_cp',-1)">−</button>
-        <input class="sp-inp" type="number" id="d_cp" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('d_cp',1)">＋</button>
-      </div>
-      <div class="sp-unit">個/日</div>
-    </div>
-  </div>
+        // 除水量リアルタイム計算処理
+        function updateLiveCalculation() {
+            // 昼間の除水
+            const dayNet = getDayNet();
+            const daySign = dayNet >= 0 ? '+' : '';
+            dayNetDisplay.innerText = `${daySign}${dayNet} ml`;
+            calcDayNet.innerText = `${daySign}${dayNet} ml`;
+            if (dayNet >= 0) {
+                dayNetDisplay.className = "text-lg font-bold text-sky-600";
+                calcDayNet.className = "text-sky-600 font-bold";
+            } else {
+                dayNetDisplay.className = "text-lg font-bold text-rose-500";
+                calcDayNet.className = "text-rose-500 font-bold";
+            }
 
-  <div class="ic">
-    <div class="ic-name">かぐやセット</div>
-    <div class="cr" style="margin-top:8px;">
-      <div class="cr-label">使用量</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('d_kg',-1)">−</button>
-        <input class="sp-inp" type="number" id="d_kg" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('d_kg',1)">＋</button>
-      </div>
-      <div class="sp-unit">個/日</div>
-    </div>
-  </div>
+            // かぐやの除水
+            const kaguyaNet = getKaguyaNetForTotal();
+            const kagSign = kaguyaNet >= 0 ? '+' : '';
+            calcKaguyaNet.innerText = `${kagSign}${kaguyaNet} ml`;
+            if (kaguyaNet >= 0) {
+                calcKaguyaNet.className = "text-indigo-600 font-bold";
+            } else {
+                calcKaguyaNet.className = "text-rose-500 font-bold";
+            }
 
-  <div class="ic">
-    <div class="ic-name">排液バッグ</div>
-    <div class="cr" style="margin-top:8px;">
-      <div class="cr-label">使用量</div>
-      <div class="sp">
-        <button class="sp-btn" type="button" onclick="adj('d_dr',-1)">−</button>
-        <input class="sp-inp" type="number" id="d_dr" value="0" min="0" inputmode="numeric">
-        <button class="sp-btn" type="button" onclick="adj('d_dr',1)">＋</button>
-      </div>
-      <div class="sp-unit">個/日</div>
-    </div>
-  </div>
-</div>
+            // 一日の総除水
+            const totalNet = dayNet + kaguyaNet;
+            const totSign = totalNet >= 0 ? '+' : '';
+            calcTotalNet.innerText = `${totSign}${totalNet} ml`;
+            if (totalNet >= 0) {
+                calcTotalNet.className = "text-sky-600 text-lg font-black";
+            } else {
+                calcTotalNet.className = "text-rose-500 text-lg font-black";
+            }
+        }
 
-<!-- 計算ボタン -->
-<button class="calc-btn" type="button" onclick="calc()">📊 在庫数を計算する</button>
+        function bindLiveCalculation() {
+            const fields = [
+                dayFillInput, dayDrainInput, kaguyaTotalNet, kaguyaDayNet, kaguyaNightNet,
+                bpSystolic, bpDiastolic,
+                pulseRate, bodyWeight, bodyTemperature, spo2Input
+            ];
+            fields.forEach(function(field) {
+                if (!field) return;
+                ['input', 'change', 'keyup', 'blur'].forEach(function(eventName) {
+                    field.addEventListener(eventName, updateLiveCalculation);
+                });
+            });
+        }
 
-<!-- 結果 -->
-<div id="result"></div>
+        bindLiveCalculation();
 
-<script>
-var WD = ['日','月','火','水','木','金','土'];
-var today = new Date(); today.setHours(0,0,0,0);
-document.getElementById('today-lbl').textContent =
-  '本日: ' + today.getFullYear() + '年' + (today.getMonth()+1) + '月' + today.getDate() + '日（' + WD[today.getDay()] + '）';
+        function toggleSign(input) {
+            if (!input) return;
+            const raw = String(input.value || '').trim();
+            if (raw.startsWith('-')) {
+                input.value = raw.slice(1);
+            } else if (raw !== '' && raw !== '0') {
+                input.value = `-${raw}`;
+            } else {
+                input.value = '-';
+            }
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.focus();
+        }
 
-var ALL_IDS = ['r25b','r25u','r4b','r4u','exb','exu','cpb','cpu','kgb','kgu','drb','dru',
-               'd_r25','d_r4','d_ex','d_cp','d_kg','d_dr'];
+        document.querySelectorAll('[data-sign-toggle]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                toggleSign(document.getElementById(button.dataset.signToggle));
+            });
+        });
 
-var ITEMS = [
-  {b:'r25b',u:'r25u',d:'d_r25',n:'レギュニール 2.5', sz:4,  unit:'袋'},
-  {b:'r4b', u:'r4u', d:'d_r4', n:'レギュニール 4.25',sz:4,  unit:'袋'},
-  {b:'exb', u:'exu', d:'d_ex', n:'UVツインバッグ',   sz:4,  unit:'袋'},
-  {b:'cpb', u:'cpu', d:'d_cp', n:'キャップキット',   sz:30, unit:'個'},
-  {b:'kgb', u:'kgu', d:'d_kg', n:'かぐやセット',     sz:10, unit:'セット'},
-  {b:'drb', u:'dru', d:'d_dr', n:'排液バッグ',       sz:30, unit:'個'}
-];
+        // データの取得・保存ロジック (localStorage)
+        function getStorageData() {
+            const raw = localStorage.getItem('pd_helper_records');
+            return raw ? JSON.parse(raw) : {};
+        }
 
-function adj(id, d) {
-  var el = document.getElementById(id);
-  var v = parseInt(el.value) || 0;
-  el.value = Math.max(0, v + d);
-  save();
-}
+        function saveStorageData(data) {
+            localStorage.setItem('pd_helper_records', JSON.stringify(data));
+        }
 
-function runOnce(fn) {
-  var now = Date.now();
-  if (window.__lastPdTap && now - window.__lastPdTap < 160) return;
-  window.__lastPdTap = now;
-  fn();
-}
+        function parseSignedInt(value) {
+            if (value === null || value === undefined || String(value).trim() === '') return 0;
+            const n = parseInt(value, 10);
+            return Number.isFinite(n) ? n : 0;
+        }
 
-function bindTap(el, fn) {
-  if (!el) return;
-  var pointerHandled = false;
-  el.addEventListener('pointerup', function(e) {
-    pointerHandled = true;
-    e.preventDefault();
-    runOnce(fn);
-  });
-  el.addEventListener('touchend', function(e) {
-    if (pointerHandled) return;
-    e.preventDefault();
-    runOnce(fn);
-  }, {passive:false});
-  el.addEventListener('click', function(e) {
-    e.preventDefault();
-    runOnce(fn);
-  });
-}
+        function parseSignedIntOrNull(value) {
+            if (value === null || value === undefined || String(value).trim() === '') return null;
+            const n = parseInt(value, 10);
+            return Number.isFinite(n) ? n : null;
+        }
 
-function bindMobileButtons() {
-  document.querySelectorAll('.sp-btn').forEach(function(btn) {
-    var raw = btn.getAttribute('onclick') || '';
-    var m = raw.match(/adj\('([^']+)',\s*(-?\d+)\)/);
-    if (!m) return;
-    var id = m[1];
-    var delta = parseInt(m[2], 10);
-    btn.removeAttribute('onclick');
-    btn.setAttribute('aria-label', (delta > 0 ? '増やす ' : '減らす ') + id);
-    bindTap(btn, function() { adj(id, delta); });
-  });
+        function saveCurrentRecord() {
+            updateLiveCalculation();
+            const date = dateInput.value;
+            if (!date) return;
 
-  document.querySelectorAll('.calc-btn').forEach(function(btn) {
-    btn.removeAttribute('onclick');
-    bindTap(btn, calc);
-  });
-}
+            const dayFill = parseSignedInt(dayFillInput.value);
+            const dayDrain = parseSignedInt(dayDrainInput.value);
+            const dayNet = dayDrain - dayFill;
+            const kaguyaNet = getKaguyaNetForTotal();
+            const totalNet = dayNet + kaguyaNet;
 
-function save() {
-  var s = {nd: document.getElementById('nd').value, dd: document.getElementById('dd').value};
-  ALL_IDS.forEach(function(id){ s[id] = document.getElementById(id).value; });
-  try { localStorage.setItem('pd4', JSON.stringify(s)); } catch(e){}
-}
+            const record = {
+                // 過去互換性用（一日の総除水量）
+                net: totalNet,
+                // 昼間の交換
+                day_fill: dayFill,
+                day_drain: dayDrain,
+                day_net: dayNet,
+                // かぐや
+                kaguya_total_net: kaguyaNet,
+                kaguya_day_net: parseSignedIntOrNull(kaguyaDayNet.value),
+                kaguya_night_net: parseSignedIntOrNull(kaguyaNightNet.value),
+                // バイタル
+                bp_systolic: parseInt(bpSystolic.value) || null,
+                bp_diastolic: parseInt(bpDiastolic.value) || null,
+                pulse: parseInt(pulseRate.value) || null,
+                weight: parseFloat(bodyWeight.value) || null,
+                temperature: parseFloat(bodyTemperature.value) || null,
+                spo2: parseInt(spo2Input.value) || null
+            };
 
-function restore() {
-  var s; try { s = JSON.parse(localStorage.getItem('pd4')||'{}'); } catch(e){ s={}; }
-  ALL_IDS.forEach(function(id){ if(s[id]!=null) document.getElementById(id).value = s[id]; });
-  if(s.nd) document.getElementById('nd').value = s.nd;
-  if(s.dd) document.getElementById('dd').value = s.dd;
-}
+            const data = getStorageData();
+            data[date] = record;
+            saveStorageData(data);
 
-function fmt(rem, item) {
-  if(rem < 0) return '不足 '+Math.abs(rem)+item.unit;
-  var b = Math.floor(rem/item.sz), u = rem % item.sz;
-  if(b>0 && u>0) return b+'箱 '+u+item.unit;
-  if(b>0) return b+'箱';
-  return u+item.unit;
-}
+            rotateSorarinQuote();
+            alert("データを保存しました！");
+            
+            // UI更新
+            renderHistory();
+            renderChart();
+        }
 
-function fmtDate(s) {
-  var d = parseDateLocal(s);
-  return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+WD[d.getDay()]+'）';
-}
+        document.getElementById('pd-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveCurrentRecord();
+        });
 
-function parseDateLocal(s) {
-  var p = s.split('-');
-  return new Date(parseInt(p[0],10), parseInt(p[1],10)-1, parseInt(p[2],10));
-}
+        document.getElementById('save-record-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            saveCurrentRecord();
+        });
 
-function makeCard(title, dateStr) {
-  var tgt = parseDateLocal(dateStr); tgt.setHours(0,0,0,0);
-  var days = Math.round((tgt - today) / 86400000);
-  if(days < 0) return '<div class="rc danger"><div class="rc-title danger">'+title+'</div><p style="color:#dc2626;font-size:13px;margin-top:4px;">過去の日付です</p></div>';
-  var bad=false, warn=false, rows='';
-  ITEMS.forEach(function(item){
-    var tot = (parseInt(document.getElementById(item.b).value)||0)*item.sz
-            + (parseInt(document.getElementById(item.u).value)||0);
-    var daily = parseInt(document.getElementById(item.d).value)||0;
-    var rem = tot - daily*days;
-    var cls='ok', icon='✅';
-    if(rem<0){cls='danger';icon='🚨';bad=true;}
-    else if(daily>0 && rem<=daily*2){cls='warn';icon='⚠️';warn=true;}
-    rows += '<div class="rr"><div class="rr-name">'+item.n+'</div><div class="rr-right"><div class="rr-num '+cls+'">'+fmt(rem,item)+'</div><span>'+icon+'</span></div></div>';
-  });
-  var cc = bad?'danger':warn?'warn':'ok';
-  return '<div class="rc '+cc+'"><div class="rc-title '+cc+'">'+title+'</div><div class="rc-date">'+fmtDate(dateStr)+'（今日から'+days+'日後）</div>'+rows+'</div>';
-}
+        // 履歴の描画処理
+        function renderHistory() {
+            const container = document.getElementById('history-container');
+            const data = getStorageData();
+            const dates = Object.keys(data).sort().reverse(); // 新しい日付順
 
-function calc() {
-  save();
-  var nd = document.getElementById('nd').value;
-  var dd = document.getElementById('dd').value;
-  var out = '';
-  if(!nd && !dd){
-    out = '<div class="blk" style="text-align:center;color:#94a3b8;padding:20px;">日付を入力してください</div>';
-    document.getElementById('print-header').textContent = '';
-  } else {
-    var now = new Date();
-    var calcTime = now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日（'+WD[now.getDay()]+'）計算';
-    document.getElementById('print-header').textContent = '📋 在庫確認レポート　' + calcTime;
-    out = '<div class="legend"><span>✅ 在庫十分</span><span>⚠️ 残り少ない</span><span>🚨 不足</span></div>';
-    out += '<div class="share-note">この結果画面をスクショして、家族や訪問看護師さんに共有できます。</div>';
-    if(nd) out += makeCard('👩‍⚕️ 訪問看護師来訪時', nd);
-    if(dd) out += makeCard('🚚 配送日当日', dd);
-    out += '<div id="pdf-btn-wrap"><button class="pdf-btn" type="button" onclick="printPDF()">📄 PDFで保存する</button></div>';
-  }
-  document.getElementById('result').innerHTML = out;
-  setTimeout(function(){ document.getElementById('result').scrollIntoView({behavior:'smooth'}); }, 100);
-}
+            if (dates.length === 0) {
+                container.innerHTML = '<p class="text-sm text-slate-400 text-center py-6">データがまだありません</p>';
+                return;
+            }
 
-function printPDF() {
-  window.print();
-}
+            container.innerHTML = '';
+            dates.forEach(date => {
+                const r = data[date];
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-4 border border-slate-100 flex flex-col gap-3 transition text-xs relative";
+                
+                const dObj = parseDateLocal(date);
+                const formatD = `${dObj.getMonth()+1}/${dObj.getDate()}`;
+                
+                const totalNet = r.net !== null ? r.net : 0;
+                const totalNetText = `${totalNet >= 0 ? '+' : ''}${totalNet} ml`;
 
-window.adj = adj;
-window.calc = calc;
-window.printPDF = printPDF;
+                // 昼間手動透析
+                const dFill = r.day_fill ?? null;
+                const dDrain = r.day_drain ?? null;
+                const dNet = r.day_net ?? 0;
+                const dayFillText = dFill === null ? '注液:未記録' : `注液:${dFill} ml`;
+                const dayDrainText = dDrain === null ? '排液:未記録' : `排液:${dDrain} ml`;
+                const dayText = `${dayFillText} / ${dayDrainText} / 除水:${dNet >= 0 ? '+' : ''}${dNet} ml`;
 
-document.getElementById('nd').addEventListener('change', save);
-document.getElementById('dd').addEventListener('change', save);
-ALL_IDS.forEach(function(id){ document.getElementById(id).addEventListener('input', save); });
+                // かぐや (夜間APD)
+                let kaguyaText = '未記録';
+                if (r.kaguya_total_net !== null && r.kaguya_total_net !== undefined) {
+                    const kgTotal = r.kaguya_total_net ?? 0;
+                    const kgDay = r.kaguya_day_net ?? 0;
+                    const kgNight = r.kaguya_night_net ?? 0;
+                    kaguyaText = `総除水:${kgTotal >= 0 ? '+' : ''}${kgTotal} ml / 昼:${kgDay >= 0 ? '+' : ''}${kgDay} / 夜:${kgNight >= 0 ? '+' : ''}${kgNight}`;
+                }
 
-restore();
-bindMobileButtons();
-</script>
+                // バイタル
+                const bpText = (r.bp_systolic && r.bp_diastolic) ? `${r.bp_systolic}/${r.bp_diastolic}` : '未記録';
+                const weightText = r.weight ? `${r.weight} kg` : '未記録';
+                const tempText = r.temperature ? `${r.temperature} ℃` : '未記録';
+                const spo2Text = r.spo2 ? `${r.spo2} %` : '未記録';
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="space-y-1">
+                            <div class="text-sm font-bold text-slate-900">${formatD}</div>
+                            <div class="text-slate-400 font-medium">${date}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] text-slate-400 font-normal">一日の総除水量</div>
+                            <span class="${totalNet >= 0 ? 'text-sky-600' : 'text-rose-500'} font-bold text-sm">${totalNetText}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-1.5 bg-white rounded-xl p-2.5 border border-slate-100 text-[11px] text-slate-600">
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-sun text-amber-500 text-[10px]"></i>
+                            <span class="font-bold text-[10px] text-slate-400">昼間:</span>
+                            <span class="font-medium">${dayText}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-moon text-indigo-500 text-[10px]"></i>
+                            <span class="font-bold text-[10px] text-slate-400">夜間:</span>
+                            <span class="font-medium text-slate-500">${kaguyaText}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-4 gap-2 pt-2 border-t border-slate-200/60 text-slate-500 text-[10px]">
+                        <div>
+                            <div class="text-slate-400">血圧</div>
+                            <span class="font-semibold text-slate-700">${bpText}</span>
+                        </div>
+                        <div>
+                            <div class="text-slate-400">体重</div>
+                            <span class="font-semibold text-slate-700">${weightText}</span>
+                        </div>
+                        <div>
+                            <div class="text-slate-400">体温</div>
+                            <span class="font-semibold text-slate-700">${tempText}</span>
+                        </div>
+                        <div>
+                            <div class="text-slate-400">SpO2</div>
+                            <span class="font-semibold text-slate-700">${spo2Text}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- コピーボタン (LINE送信など用) -->
+                    <button onclick="copyToClipboard('${date}')" class="absolute top-2.5 right-9 bg-sky-100 hover:bg-sky-200 text-sky-600 rounded-full w-5 h-5 flex items-center justify-center scale-75 transition" title="LINE送信用にコピー">
+                        <i class="fa-solid fa-copy"></i>
+                    </button>
+                    
+                    <!-- 削除ボタン -->
+                    <button onclick="deleteRecord('${date}')" class="absolute top-2.5 right-2.5 bg-red-100 hover:bg-red-200 text-red-600 rounded-full w-5 h-5 flex items-center justify-center scale-75 transition">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 記録をクリップボードにコピー (訪問看護・LINE送信用)
+        window.copyToClipboard = function(date) {
+            const data = getStorageData();
+            const r = data[date];
+            if (!r) return;
+
+            const dObj = parseDateLocal(date);
+            const formatD = `${dObj.getMonth()+1}/${dObj.getDate()}`;
+            
+            const totalNet = r.net !== null ? r.net : 0;
+            const totalNetText = `${totalNet >= 0 ? '+' : ''}${totalNet} ml`;
+
+            // 昼間手動透析
+            const dFill = r.day_fill ?? null;
+            const dDrain = r.day_drain ?? null;
+            const dNet = r.day_net ?? 0;
+            const dayFillText = dFill === null ? '注液:未記録' : `注液:${dFill} ml`;
+            const dayDrainText = dDrain === null ? '排液:未記録' : `排液:${dDrain} ml`;
+            const dayText = `${dayFillText} / ${dayDrainText} / 除水:${dNet >= 0 ? '+' : ''}${dNet} ml`;
+
+            // かぐや (夜間APD)
+            let kaguyaText = '未記録';
+            if (r.kaguya_total_net !== null && r.kaguya_total_net !== undefined) {
+                const kgTotal = r.kaguya_total_net ?? 0;
+                const kgDay = r.kaguya_day_net ?? 0;
+                const kgNight = r.kaguya_night_net ?? 0;
+                kaguyaText = `総除水:${kgTotal >= 0 ? '+' : ''}${kgTotal} ml / 昼:${kgDay >= 0 ? '+' : ''}${kgDay} ml / 夜:${kgNight >= 0 ? '+' : ''}${kgNight} ml`;
+            }
+
+            // バイタル
+            const bpText = (r.bp_systolic && r.bp_diastolic) ? `${r.bp_systolic}/${r.bp_diastolic} mmHg` : '未記録';
+            const weightText = r.weight ? `${r.weight} kg` : '未記録';
+            const tempText = r.temperature ? `${r.temperature} ℃` : '未記録';
+            const spo2Text = r.spo2 ? `${r.spo2} %` : '未記録';
+            const pulseText = r.pulse ? `${r.pulse} bpm` : '未記録';
+
+            const copyText = `【${formatD} 腹膜透析・バイタル記録】
+■ 昼間の交換 (手動)
+  ${dayText}
+■ 「かぐや」治療結果 (夜間APD)
+  ${kaguyaText}
+■ 一日の総除水量
+  ${totalNetText}
+■ 治療後バイタル
+  血圧: ${bpText}
+  体重: ${weightText}
+  脈拍: ${pulseText}
+  体温: ${tempText}
+  SpO2: ${spo2Text}`;
+
+            navigator.clipboard.writeText(copyText).then(() => {
+                alert(`【${formatD}】の記録をコピーしました！\n訪問看護師さんやご家族のLINEにそのまま貼り付けて送信してください。☆`);
+            }).catch(err => {
+                alert("コピーに失敗しました: " + err);
+            });
+        };
+
+        // 履歴削除
+        window.deleteRecord = function(date) {
+            if(confirm(`${date} の記録を削除してもよろしいですか？`)) {
+                const data = getStorageData();
+                delete data[date];
+                saveStorageData(data);
+                renderHistory();
+                renderChart();
+            }
+        };
+
+        // グラフの描画処理
+        let myChart = null;
+        function parseDateLocal(dateStr) {
+            const parts = dateStr.split('-').map(Number);
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+
+        function getLast7DaysSeries() {
+            const data = getStorageData();
+            const labels = [];
+            const netData = [];
+            const systolicData = [];
+            
+            for(let i=6; i>=0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dStr = toLocalDateString(d);
+                labels.push(`${d.getMonth()+1}/${d.getDate()}`);
+                
+                const rec = data[dStr];
+                netData.push(rec && rec.net !== null ? rec.net : 0);
+                systolicData.push(rec && rec.bp_systolic !== null ? rec.bp_systolic : null);
+            }
+
+            return { labels, netData, systolicData };
+        }
+
+        function renderSimpleChart() {
+            const wrap = document.getElementById('pdChart')?.parentElement;
+            if (!wrap) return;
+            const series = getLast7DaysSeries();
+            const maxAbs = Math.max(1, ...series.netData.map(function(v) { return Math.abs(v || 0); }));
+            const html = series.labels.map(function(label, index) {
+                const value = series.netData[index] || 0;
+                const height = Math.max(6, Math.round((Math.abs(value) / maxAbs) * 150));
+                const sign = value >= 0 ? '+' : '';
+                const cls = value < 0 ? ' minus' : '';
+                return `
+                    <div class="simple-chart-item">
+                        <div class="simple-chart-value">${sign}${value}</div>
+                        <div class="simple-chart-bar${cls}" style="height:${height}px"></div>
+                        <div class="simple-chart-label">${label}</div>
+                    </div>
+                `;
+            }).join('');
+            wrap.innerHTML = '<div class="simple-chart" aria-label="過去7日間の除水量グラフ">' + html + '</div>';
+        }
+
+        function renderChart() {
+            if (typeof Chart === 'undefined') {
+                renderSimpleChart();
+                return;
+            }
+            const canvas = document.getElementById('pdChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const series = getLast7DaysSeries();
+
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: series.labels,
+                    datasets: [
+                        {
+                            label: '除水量 (ml)',
+                            data: series.netData,
+                            backgroundColor: 'rgba(56, 189, 248, 0.6)',
+                            borderColor: 'rgba(56, 189, 248, 1)',
+                            borderWidth: 2,
+                            borderRadius: 6,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '血圧 上 (mmHg)',
+                            data: series.systolicData,
+                            type: 'line',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            yAxisID: 'y1',
+                            spanGaps: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '除水量 (ml)',
+                                font: { size: 9 }
+                            },
+                            grid: { drawOnChartArea: false }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '血圧 (mmHg)',
+                                font: { size: 9 }
+                            },
+                            grid: { drawOnChartArea: false },
+                            min: 60,
+                            max: 180
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { boxWidth: 10, font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // バックアップ・インポート機能
+        document.getElementById('btn-export').addEventListener('click', function() {
+            const dataStr = localStorage.getItem('pd_helper_records');
+            if(!dataStr || dataStr === '{}') {
+                alert("バックアップするデータがありません。");
+                return;
+            }
+            navigator.clipboard.writeText(dataStr).then(() => {
+                alert("バックアップ用データをクリップボードにコピーしました！メモ帳などに保存してください。");
+            }).catch(err => {
+                alert("コピーに失敗しました: " + err);
+            });
+        });
+
+        document.getElementById('btn-import').addEventListener('click', function() {
+            const raw = prompt("バックアップしたJSONテキストを貼り付けてください：");
+            if (!raw) return;
+            try {
+                const parsed = JSON.parse(raw);
+                if (typeof parsed === 'object' && parsed !== null) {
+                    saveStorageData(parsed);
+                    alert("データを正常に復元しました！");
+                    renderHistory();
+                    renderChart();
+                } else {
+                    alert("データの形式が正しくありません。");
+                }
+            } catch(e) {
+                alert("解析に失敗しました。正しいデータを貼り付けてください。");
+            }
+        });
+
+        // 起動処理
+        rotateSorarinQuote();
+        renderHistory();
+        renderChart();
+    </script>
 </body>
 </html>
