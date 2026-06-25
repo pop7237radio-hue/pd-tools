@@ -292,6 +292,26 @@
             overflow: visible !important;
         }
 
+        .history-action {
+            width: 38px !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            border-radius: 999px !important;
+            padding: 0 !important;
+            flex-shrink: 0;
+        }
+
+        .history-vitals {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+
+        .history-vitals span {
+            display: block;
+            white-space: nowrap;
+            overflow: visible;
+            font-size: 1.05rem !important;
+        }
+
         .safe-message {
             background: #ecfeff;
             border: 2px solid #bae6fd;
@@ -507,7 +527,7 @@
                             </div>
                             <div>
                                 <label class="block text-[11px] text-slate-500 mb-1" for="body-temperature">体温 (℃)</label>
-                                <input type="number" id="body-temperature" step="0.1" inputmode="decimal" placeholder="36.8" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-emerald-500">
+                                <input type="text" id="body-temperature" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" placeholder="36.8" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-emerald-500">
                             </div>
                         </div>
                         <div>
@@ -767,6 +787,21 @@
             return Number.isFinite(n) ? n : null;
         }
 
+        function parseDecimalOrNull(value) {
+            if (value === null || value === undefined || String(value).trim() === '') return null;
+            const normalized = String(value).trim().replace('．', '.').replace(',', '.');
+            const n = parseFloat(normalized);
+            return Number.isFinite(n) ? Math.round(n * 10) / 10 : null;
+        }
+
+        function formatDecimal(value, unit) {
+            if (value === null || value === undefined || value === '') return '未記録';
+            const n = Number(value);
+            if (!Number.isFinite(n)) return '未記録';
+            const text = Number.isInteger(n) ? String(n) : n.toFixed(1);
+            return `${text} ${unit}`;
+        }
+
         function saveCurrentRecord() {
             updateLiveCalculation();
             const date = dateInput.value;
@@ -793,8 +828,8 @@
                 bp_systolic: parseInt(bpSystolic.value) || null,
                 bp_diastolic: parseInt(bpDiastolic.value) || null,
                 pulse: parseInt(pulseRate.value) || null,
-                weight: parseFloat(bodyWeight.value) || null,
-                temperature: parseFloat(bodyTemperature.value) || null,
+                weight: parseDecimalOrNull(bodyWeight.value),
+                temperature: parseDecimalOrNull(bodyTemperature.value),
                 spo2: parseInt(spo2Input.value) || null
             };
 
@@ -862,19 +897,29 @@
 
                 // バイタル
                 const bpText = (r.bp_systolic && r.bp_diastolic) ? `${r.bp_systolic}/${r.bp_diastolic}` : '未記録';
-                const weightText = r.weight ? `${r.weight} kg` : '未記録';
-                const tempText = r.temperature ? `${r.temperature} ℃` : '未記録';
+                const weightText = formatDecimal(r.weight, 'kg');
+                const tempText = formatDecimal(r.temperature, '℃');
                 const spo2Text = r.spo2 ? `${r.spo2} %` : '未記録';
 
                 card.innerHTML = `
-                    <div class="flex justify-between items-start">
+                    <div class="flex justify-between items-start gap-3">
                         <div class="space-y-1">
                             <div class="text-sm font-bold text-slate-900">${formatD}</div>
                             <div class="text-slate-400 font-medium">${date}</div>
                         </div>
-                        <div class="text-right">
-                            <div class="text-[10px] text-slate-400 font-normal">一日の総除水量</div>
-                            <span class="${totalNet >= 0 ? 'text-sky-600' : 'text-rose-500'} font-bold text-sm">${totalNetText}</span>
+                        <div class="flex flex-col items-end gap-2">
+                            <div class="text-right pr-1">
+                                <div class="text-[10px] text-slate-400 font-normal">一日の総除水量</div>
+                                <span class="${totalNet >= 0 ? 'text-sky-600' : 'text-rose-500'} font-bold text-sm">${totalNetText}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="copyToClipboard('${date}')" class="history-action bg-sky-100 hover:bg-sky-200 text-sky-600 flex items-center justify-center transition" title="LINE送信用にコピー" aria-label="LINE送信用にコピー">
+                                    <i class="fa-solid fa-copy"></i>
+                                </button>
+                                <button onclick="deleteRecord('${date}')" class="history-action bg-red-100 hover:bg-red-200 text-red-600 flex items-center justify-center transition" aria-label="記録を削除">
+                                    <i class="fa-solid fa-times"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
@@ -891,7 +936,7 @@
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-4 gap-2 pt-2 border-t border-slate-200/60 text-slate-500 text-[10px]">
+                    <div class="history-vitals grid gap-3 pt-2 border-t border-slate-200/60 text-slate-500 text-[10px]">
                         <div>
                             <div class="text-slate-400">血圧</div>
                             <span class="font-semibold text-slate-700">${bpText}</span>
@@ -909,16 +954,6 @@
                             <span class="font-semibold text-slate-700">${spo2Text}</span>
                         </div>
                     </div>
-                    
-                    <!-- コピーボタン (LINE送信など用) -->
-                    <button onclick="copyToClipboard('${date}')" class="absolute top-2.5 right-9 bg-sky-100 hover:bg-sky-200 text-sky-600 rounded-full w-5 h-5 flex items-center justify-center scale-75 transition" title="LINE送信用にコピー">
-                        <i class="fa-solid fa-copy"></i>
-                    </button>
-                    
-                    <!-- 削除ボタン -->
-                    <button onclick="deleteRecord('${date}')" class="absolute top-2.5 right-2.5 bg-red-100 hover:bg-red-200 text-red-600 rounded-full w-5 h-5 flex items-center justify-center scale-75 transition">
-                        <i class="fa-solid fa-times"></i>
-                    </button>
                 `;
                 container.appendChild(card);
             });
@@ -955,8 +990,8 @@
 
             // バイタル
             const bpText = (r.bp_systolic && r.bp_diastolic) ? `${r.bp_systolic}/${r.bp_diastolic} mmHg` : '未記録';
-            const weightText = r.weight ? `${r.weight} kg` : '未記録';
-            const tempText = r.temperature ? `${r.temperature} ℃` : '未記録';
+            const weightText = formatDecimal(r.weight, 'kg');
+            const tempText = formatDecimal(r.temperature, '℃');
             const spo2Text = r.spo2 ? `${r.spo2} %` : '未記録';
             const pulseText = r.pulse ? `${r.pulse} bpm` : '未記録';
 
