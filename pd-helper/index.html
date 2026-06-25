@@ -458,15 +458,24 @@
                         <div class="grid grid-cols-3 gap-2">
                             <div>
                                 <label class="block text-[10px] text-slate-500 mb-1" for="kaguya-total-net">総除水量 (ml)</label>
-                                <input type="number" id="kaguya-total-net" inputmode="decimal" step="1" placeholder="1660" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-indigo-500 font-bold text-indigo-700">
+                                <div class="flex gap-1">
+                                    <input type="text" id="kaguya-total-net" inputmode="decimal" pattern="-?[0-9]*" placeholder="1660" class="w-full min-w-0 bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-indigo-500 font-bold text-indigo-700">
+                                    <button type="button" data-sign-toggle="kaguya-total-net" class="shrink-0 min-w-[42px] rounded-xl border-2 border-indigo-200 bg-white px-2 py-2 text-xs font-black text-indigo-700 active:bg-indigo-50" aria-label="総除水量のプラスとマイナスを切り替え">±</button>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-[10px] text-slate-500 mb-1" for="kaguya-day-net">昼間除水量 (ml)</label>
-                                <input type="number" id="kaguya-day-net" inputmode="decimal" step="1" placeholder="64 / -50" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-indigo-500">
+                                <div class="flex gap-1">
+                                    <input type="text" id="kaguya-day-net" inputmode="decimal" pattern="-?[0-9]*" placeholder="64 / -50" class="w-full min-w-0 bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-indigo-500">
+                                    <button type="button" data-sign-toggle="kaguya-day-net" class="shrink-0 min-w-[42px] rounded-xl border-2 border-indigo-200 bg-white px-2 py-2 text-xs font-black text-indigo-700 active:bg-indigo-50" aria-label="昼間除水量のプラスとマイナスを切り替え">±</button>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-[10px] text-slate-500 mb-1" for="kaguya-night-net">夜間除水量 (ml)</label>
-                                <input type="number" id="kaguya-night-net" inputmode="decimal" step="1" placeholder="1596 / -50" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-indigo-500">
+                                <div class="flex gap-1">
+                                    <input type="text" id="kaguya-night-net" inputmode="decimal" pattern="-?[0-9]*" placeholder="1596 / -50" class="w-full min-w-0 bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:outline-none focus:border-indigo-500">
+                                    <button type="button" data-sign-toggle="kaguya-night-net" class="shrink-0 min-w-[42px] rounded-xl border-2 border-indigo-200 bg-white px-2 py-2 text-xs font-black text-indigo-700 active:bg-indigo-50" aria-label="夜間除水量のプラスとマイナスを切り替え">±</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -715,6 +724,26 @@
         }
 
         bindLiveCalculation();
+
+        function toggleSign(input) {
+            if (!input) return;
+            const raw = String(input.value || '').trim();
+            if (raw.startsWith('-')) {
+                input.value = raw.slice(1);
+            } else if (raw !== '' && raw !== '0') {
+                input.value = `-${raw}`;
+            } else {
+                input.value = '-';
+            }
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.focus();
+        }
+
+        document.querySelectorAll('[data-sign-toggle]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                toggleSign(document.getElementById(button.dataset.signToggle));
+            });
+        });
 
         // データの取得・保存ロジック (localStorage)
         function getStorageData() {
