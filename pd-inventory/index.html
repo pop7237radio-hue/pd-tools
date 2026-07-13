@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#2563eb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="透析在庫">
@@ -45,6 +46,25 @@ body {
 }
 .guide b { color: #1d4ed8; }
 
+.storage-notice {
+  display: none;
+  background: #fffbeb;
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+  color: #78350f;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 10px;
+  padding: 12px 14px;
+  width: calc(100% - 20px);
+}
+.storage-notice.show { display: block; }
+.storage-notice button {
+  width: 100%; margin-top: 8px; padding: 10px;
+  border: 1.5px solid #f59e0b; border-radius: 10px;
+  background: white; color: #92400e; font-weight: bold;
+}
+
 /* ブロック */
 .blk {
   background: white;
@@ -79,6 +99,17 @@ input[type="date"] {
 .ic:last-child { margin-bottom: 0; }
 .ic-name { font-size: 16px; font-weight: bold; margin-bottom: 1px; }
 .ic-sub  { font-size: 11px; color: #64748b; margin-bottom: 10px; }
+.pack-setting {
+  display: flex; align-items: center; gap: 8px;
+  margin: 8px 0 10px; color: #475569; font-size: 12px;
+}
+.pack-setting label { flex: 0 0 auto; }
+.pack-setting input {
+  width: 86px; min-width: 0; padding: 8px;
+  border: 2px solid #cbd5e1; border-radius: 8px;
+  background: white; color: #1e293b; font-size: 16px; font-weight: bold;
+  text-align: center;
+}
 
 /* カウンター行 */
 .cr {
@@ -194,6 +225,20 @@ input[type="date"] {
   width: calc(100% - 20px);
 }
 
+.data-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.data-btn {
+  min-height: 48px; padding: 10px;
+  border: 0; border-radius: 12px;
+  background: #dbeafe; color: #1e40af;
+  font-size: 14px; font-weight: bold; cursor: pointer;
+}
+.data-note, .app-footnote {
+  color: #64748b; font-size: 12px; line-height: 1.6;
+}
+.app-footnote { margin: 14px 12px 0; text-align: center; }
+
 /* 印刷専用エリア */
 #print-header { display: none; }
 
@@ -236,7 +281,12 @@ input[type="date"] {
   1. 訪問看護師さんが来る日と配送日を入れる<br>
   2. いま家にある箱数・端数を入れる<br>
   3. 1日あたりの使用量を確認して「在庫数を計算する」<br>
-  入力した内容は、このブラウザ内に自動保存されます。
+  入力した内容は、この端末のブラウザに保存されます。端末変更やブラウザデータ消去で消えるため、定期的に書き出してください。
+</div>
+
+<div id="storage-notice" class="storage-notice" role="status" aria-live="polite">
+  <div id="storage-notice-text"></div>
+  <button id="storage-recovery-export" type="button" style="display:none;">退避した元データを書き出す</button>
 </div>
 
 <!-- 日付 -->
@@ -258,7 +308,8 @@ input[type="date"] {
 
   <div class="ic">
     <div class="ic-name">レギュニール 2.5</div>
-    <div class="ic-sub">2500mL（1箱＝4袋）</div>
+    <div class="ic-sub">2500mL</div>
+    <div class="pack-setting"><label for="sz_r25">1箱あたり</label><input type="number" id="sz_r25" value="4" min="1" inputmode="numeric"><span>袋</span></div>
     <div class="cr">
       <div class="cr-label">箱数</div>
       <div class="sp">
@@ -281,7 +332,8 @@ input[type="date"] {
 
   <div class="ic">
     <div class="ic-name">レギュニール 4.25</div>
-    <div class="ic-sub">2000mL（1箱＝4袋）</div>
+    <div class="ic-sub">2000mL</div>
+    <div class="pack-setting"><label for="sz_r4">1箱あたり</label><input type="number" id="sz_r4" value="4" min="1" inputmode="numeric"><span>袋</span></div>
     <div class="cr">
       <div class="cr-label">箱数</div>
       <div class="sp">
@@ -304,7 +356,8 @@ input[type="date"] {
 
   <div class="ic">
     <div class="ic-name">UVツインバッグ</div>
-    <div class="ic-sub">エクストラニール 1500mL（1箱＝4袋）</div>
+    <div class="ic-sub">エクストラニール 1500mL</div>
+    <div class="pack-setting"><label for="sz_ex">1箱あたり</label><input type="number" id="sz_ex" value="4" min="1" inputmode="numeric"><span>袋</span></div>
     <div class="cr">
       <div class="cr-label">箱数</div>
       <div class="sp">
@@ -327,7 +380,8 @@ input[type="date"] {
 
   <div class="ic">
     <div class="ic-name">キャップキット</div>
-    <div class="ic-sub">つなぐセット（1箱＝30個）</div>
+    <div class="ic-sub">つなぐセット</div>
+    <div class="pack-setting"><label for="sz_cp">1箱あたり</label><input type="number" id="sz_cp" value="30" min="1" inputmode="numeric"><span>個</span></div>
     <div class="cr">
       <div class="cr-label">箱数</div>
       <div class="sp">
@@ -350,7 +404,8 @@ input[type="date"] {
 
   <div class="ic">
     <div class="ic-name">かぐやセット</div>
-    <div class="ic-sub">ホームPDシステム（1箱＝10セット）</div>
+    <div class="ic-sub">ホームPDシステム</div>
+    <div class="pack-setting"><label for="sz_kg">1箱あたり</label><input type="number" id="sz_kg" value="10" min="1" inputmode="numeric"><span>セット</span></div>
     <div class="cr">
       <div class="cr-label">箱数</div>
       <div class="sp">
@@ -373,7 +428,8 @@ input[type="date"] {
 
   <div class="ic">
     <div class="ic-name">排液バッグ</div>
-    <div class="ic-sub">つなぐセット（1箱＝30個）</div>
+    <div class="ic-sub">つなぐセット</div>
+    <div class="pack-setting"><label for="sz_dr">1箱あたり</label><input type="number" id="sz_dr" value="30" min="1" inputmode="numeric"><span>個</span></div>
     <div class="cr">
       <div class="cr-label">箱数</div>
       <div class="sp">
@@ -398,7 +454,7 @@ input[type="date"] {
 <!-- 使用量（最初から開いた状態） -->
 <div class="blk">
   <div class="blk-title">⚙️ 1日あたりの使用量</div>
-  <p style="font-size:12px;color:#64748b;margin-bottom:12px;">最初に1回だけ設定してください。設定後は変更不要です。</p>
+  <p style="font-size:12px;color:#64748b;margin-bottom:12px;">箱入数と使用量は、実際の内容に合わせて変更できます。</p>
 
   <div class="ic">
     <div class="ic-name">レギュニール 2.5</div>
@@ -482,8 +538,20 @@ input[type="date"] {
 <!-- 計算ボタン -->
 <button class="calc-btn" type="button" onclick="calc()">📊 在庫数を計算する</button>
 
+<div class="blk">
+  <div class="blk-title">💾 データのバックアップ</div>
+  <p class="data-note">この端末のブラウザに保存されます。機種変更やブラウザデータ消去に備えて、JSONファイルを残してください。</p>
+  <div class="data-actions">
+    <button id="btn-export-json" class="data-btn" type="button">JSONを書き出す</button>
+    <button id="btn-import-json" class="data-btn" type="button">JSONを読み込む</button>
+  </div>
+  <input id="backup-file-input" type="file" accept="application/json,.json" hidden>
+</div>
+
 <!-- 結果 -->
 <div id="result"></div>
+
+<p class="app-footnote">記録と在庫確認の補助用ツールです。医療判断は行わず、体調や治療の判断は主治医へ相談してください。<br>All rights reserved. 無断複製・再配布を禁止します。</p>
 
 <script>
 var WD = ['日','月','火','水','木','金','土'];
@@ -491,22 +559,187 @@ var today = new Date(); today.setHours(0,0,0,0);
 document.getElementById('today-lbl').textContent =
   '本日: ' + today.getFullYear() + '年' + (today.getMonth()+1) + '月' + today.getDate() + '日（' + WD[today.getDay()] + '）';
 
-var ALL_IDS = ['r25b','r25u','r4b','r4u','exb','exu','cpb','cpu','kgb','kgu','drb','dru',
-               'd_r25','d_r4','d_ex','d_cp','d_kg','d_dr'];
+var INVENTORY_IDS = ['r25b','r25u','r4b','r4u','exb','exu','cpb','cpu','kgb','kgu','drb','dru'];
+var DAILY_IDS = ['d_r25','d_r4','d_ex','d_cp','d_kg','d_dr'];
+var PACK_IDS = ['sz_r25','sz_r4','sz_ex','sz_cp','sz_kg','sz_dr'];
+var PACK_DEFAULTS = {sz_r25:4, sz_r4:4, sz_ex:4, sz_cp:30, sz_kg:10, sz_dr:30};
+var ALL_IDS = INVENTORY_IDS.concat(DAILY_IDS, PACK_IDS);
 
 var ITEMS = [
-  {b:'r25b',u:'r25u',d:'d_r25',n:'レギュニール 2.5', sz:4,  unit:'袋'},
-  {b:'r4b', u:'r4u', d:'d_r4', n:'レギュニール 4.25',sz:4,  unit:'袋'},
-  {b:'exb', u:'exu', d:'d_ex', n:'UVツインバッグ',   sz:4,  unit:'袋'},
-  {b:'cpb', u:'cpu', d:'d_cp', n:'キャップキット',   sz:30, unit:'個'},
-  {b:'kgb', u:'kgu', d:'d_kg', n:'かぐやセット',     sz:10, unit:'セット'},
-  {b:'drb', u:'dru', d:'d_dr', n:'排液バッグ',       sz:30, unit:'個'}
+  {b:'r25b',u:'r25u',d:'d_r25',sz:'sz_r25',n:'レギュニール 2.5',unit:'袋'},
+  {b:'r4b', u:'r4u', d:'d_r4', sz:'sz_r4', n:'レギュニール 4.25',unit:'袋'},
+  {b:'exb', u:'exu', d:'d_ex', sz:'sz_ex', n:'UVツインバッグ',unit:'袋'},
+  {b:'cpb', u:'cpu', d:'d_cp', sz:'sz_cp', n:'キャップキット',unit:'個'},
+  {b:'kgb', u:'kgu', d:'d_kg', sz:'sz_kg', n:'かぐやセット',unit:'セット'},
+  {b:'drb', u:'dru', d:'d_dr', sz:'sz_dr', n:'排液バッグ',unit:'個'}
 ];
+
+var STORAGE_KEY = 'pd4';
+var memoryState = {};
+var storageAvailable = true;
+var recoverySnapshot = null;
+
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isIntegerLike(value) {
+  if (value === '' || value === null || value === undefined) return true;
+  if (typeof value === 'number') return Number.isSafeInteger(value);
+  if (typeof value !== 'string' || !/^-?\d+$/.test(value.trim())) return false;
+  return Number.isSafeInteger(Number(value.trim()));
+}
+
+function isValidDateValue(value) {
+  if (value === '' || value === null || value === undefined) return true;
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  var p = value.split('-').map(Number);
+  var date = new Date(p[0], p[1]-1, p[2]);
+  return date.getFullYear() === p[0] && date.getMonth() === p[1]-1 && date.getDate() === p[2];
+}
+
+function isValidInventoryState(state, allowNegative, requireKnownKey) {
+  if (!isPlainObject(state)) return false;
+  if (requireKnownKey && !['nd','dd'].concat(ALL_IDS).some(function(id) { return Object.prototype.hasOwnProperty.call(state, id); })) return false;
+  if (!isValidDateValue(state.nd) || !isValidDateValue(state.dd)) return false;
+  return ALL_IDS.every(function(id) {
+    var value = state[id];
+    if (!isIntegerLike(value)) return false;
+    if (value === '' || value === null || value === undefined || allowNegative) return true;
+    return Number(value) >= minimumFor(id);
+  });
+}
+
+function storageTimestamp() {
+  var now = new Date();
+  return [now.getFullYear(), String(now.getMonth()+1).padStart(2,'0'), String(now.getDate()).padStart(2,'0'),
+          String(now.getHours()).padStart(2,'0'), String(now.getMinutes()).padStart(2,'0'), String(now.getSeconds()).padStart(2,'0')].join('');
+}
+
+function showStorageNotice(message, showRecoveryButton) {
+  var notice = document.getElementById('storage-notice');
+  document.getElementById('storage-notice-text').textContent = message;
+  notice.classList.add('show');
+  document.getElementById('storage-recovery-export').style.display = showRecoveryButton ? 'block' : 'none';
+}
+
+function quarantineBrokenStorage(raw) {
+  var backupKey = STORAGE_KEY + '_corrupt_backup_' + storageTimestamp();
+  recoverySnapshot = {key: backupKey, raw: raw};
+  var isolated = false;
+  try {
+    localStorage.setItem(backupKey, raw);
+    localStorage.setItem(STORAGE_KEY, '{}');
+    isolated = true;
+  } catch(e) {
+    storageAvailable = false;
+  }
+  memoryState = {};
+  showStorageNotice(
+    isolated
+      ? '記録の一部が読めなかったので退避しました。入力欄は初期値で起動しています。'
+      : '記録の一部が読めませんでした。元データはこの画面を閉じる前に書き出してください。現在は一時表示で動作しています。',
+    true
+  );
+  return memoryState;
+}
+
+function discoverExistingRecovery() {
+  if (recoverySnapshot || !storageAvailable) return;
+  try {
+    var prefix = STORAGE_KEY + '_corrupt_backup_';
+    var keys = [];
+    for (var i = 0; i < localStorage.length; i += 1) {
+      var key = localStorage.key(i);
+      if (key && key.indexOf(prefix) === 0) keys.push(key);
+    }
+    keys.sort();
+    var latest = keys[keys.length - 1];
+    if (!latest) return;
+    recoverySnapshot = {key:latest, raw:localStorage.getItem(latest) || ''};
+    showStorageNotice('以前、読めない記録を退避しています。必要なら元データを書き出せます。', true);
+  } catch(e) {}
+}
+
+function readState() {
+  if (!storageAvailable) return memoryState;
+  var raw;
+  try {
+    raw = localStorage.getItem(STORAGE_KEY);
+  } catch(e) {
+    storageAvailable = false;
+    showStorageNotice('このブラウザでは端末保存を利用できません。画面を閉じるまでの一時表示で動作しています。', false);
+    return memoryState;
+  }
+  if (!raw) {
+    memoryState = {};
+    return memoryState;
+  }
+  try {
+    var parsed = JSON.parse(raw);
+    if (!isValidInventoryState(parsed, true)) throw new Error('state is invalid');
+    memoryState = parsed;
+    return memoryState;
+  } catch(e) {
+    return quarantineBrokenStorage(raw);
+  }
+}
+
+function writeState(state) {
+  if (!isValidInventoryState(state, false)) return false;
+  memoryState = state;
+  if (!storageAvailable) return false;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return true;
+  } catch(e) {
+    storageAvailable = false;
+    showStorageNotice('端末への保存に失敗しました。画面を閉じる前にJSONを書き出してください。', false);
+    return false;
+  }
+}
+
+function downloadTextFile(filename, text, type) {
+  var blob = new Blob([text], {type:type || 'text/plain;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function minimumFor(id) {
+  return PACK_IDS.indexOf(id) >= 0 ? 1 : 0;
+}
+
+function safeIntegerValue(id, fallback) {
+  var value = parseInt(document.getElementById(id).value, 10);
+  var min = minimumFor(id);
+  if (!Number.isFinite(value)) return fallback == null ? min : fallback;
+  return Math.max(min, value);
+}
+
+function normalizeField(id, finalize) {
+  var el = document.getElementById(id);
+  var raw = String(el.value || '').trim();
+  if (raw === '') {
+    if (finalize) el.value = String(PACK_DEFAULTS[id] || 0);
+    return;
+  }
+  var value = parseInt(raw, 10);
+  if (!Number.isFinite(value) || value < minimumFor(id)) el.value = String(minimumFor(id));
+  else el.value = String(Math.floor(value));
+}
 
 function adj(id, d) {
   var el = document.getElementById(id);
-  var v = parseInt(el.value) || 0;
-  el.value = Math.max(0, v + d);
+  var v = safeIntegerValue(id, minimumFor(id));
+  if (d < 0 && INVENTORY_IDS.indexOf(id) >= 0 && v > 0 && !confirm('在庫を1減らしますか？')) return;
+  el.value = Math.max(minimumFor(id), v + d);
+  el.dataset.previousValue = el.value;
   save();
 }
 
@@ -519,17 +752,6 @@ function runOnce(fn) {
 
 function bindTap(el, fn) {
   if (!el) return;
-  var pointerHandled = false;
-  el.addEventListener('pointerup', function(e) {
-    pointerHandled = true;
-    e.preventDefault();
-    runOnce(fn);
-  });
-  el.addEventListener('touchend', function(e) {
-    if (pointerHandled) return;
-    e.preventDefault();
-    runOnce(fn);
-  }, {passive:false});
   el.addEventListener('click', function(e) {
     e.preventDefault();
     runOnce(fn);
@@ -554,22 +776,29 @@ function bindMobileButtons() {
   });
 }
 
-function save() {
+function collectFormState() {
   var s = {nd: document.getElementById('nd').value, dd: document.getElementById('dd').value};
   ALL_IDS.forEach(function(id){ s[id] = document.getElementById(id).value; });
-  try { localStorage.setItem('pd4', JSON.stringify(s)); } catch(e){}
+  return s;
+}
+
+function save() {
+  return writeState(collectFormState());
 }
 
 function restore() {
-  var s; try { s = JSON.parse(localStorage.getItem('pd4')||'{}'); } catch(e){ s={}; }
-  ALL_IDS.forEach(function(id){ if(s[id]!=null) document.getElementById(id).value = s[id]; });
+  var s = readState();
+  ALL_IDS.forEach(function(id){
+    if(s[id]!=null) document.getElementById(id).value = s[id];
+    normalizeField(id, true);
+  });
   if(s.nd) document.getElementById('nd').value = s.nd;
   if(s.dd) document.getElementById('dd').value = s.dd;
 }
 
-function fmt(rem, item) {
+function fmt(rem, item, packSize) {
   if(rem < 0) return '不足 '+Math.abs(rem)+item.unit;
-  var b = Math.floor(rem/item.sz), u = rem % item.sz;
+  var b = Math.floor(rem/packSize), u = rem % packSize;
   if(b>0 && u>0) return b+'箱 '+u+item.unit;
   if(b>0) return b+'箱';
   return u+item.unit;
@@ -591,14 +820,14 @@ function makeCard(title, dateStr) {
   if(days < 0) return '<div class="rc danger"><div class="rc-title danger">'+title+'</div><p style="color:#dc2626;font-size:13px;margin-top:4px;">過去の日付です</p></div>';
   var bad=false, warn=false, rows='';
   ITEMS.forEach(function(item){
-    var tot = (parseInt(document.getElementById(item.b).value)||0)*item.sz
-            + (parseInt(document.getElementById(item.u).value)||0);
-    var daily = parseInt(document.getElementById(item.d).value)||0;
+    var packSize = safeIntegerValue(item.sz, PACK_DEFAULTS[item.sz]);
+    var tot = safeIntegerValue(item.b, 0)*packSize + safeIntegerValue(item.u, 0);
+    var daily = safeIntegerValue(item.d, 0);
     var rem = tot - daily*days;
     var cls='ok', icon='✅';
     if(rem<0){cls='danger';icon='🚨';bad=true;}
     else if(daily>0 && rem<=daily*2){cls='warn';icon='⚠️';warn=true;}
-    rows += '<div class="rr"><div class="rr-name">'+item.n+'</div><div class="rr-right"><div class="rr-num '+cls+'">'+fmt(rem,item)+'</div><span>'+icon+'</span></div></div>';
+    rows += '<div class="rr"><div class="rr-name">'+item.n+'</div><div class="rr-right"><div class="rr-num '+cls+'">'+fmt(rem,item,packSize)+'</div><span>'+icon+'</span></div></div>';
   });
   var cc = bad?'danger':warn?'warn':'ok';
   return '<div class="rc '+cc+'"><div class="rc-title '+cc+'">'+title+'</div><div class="rc-date">'+fmtDate(dateStr)+'（今日から'+days+'日後）</div>'+rows+'</div>';
@@ -636,8 +865,85 @@ window.printPDF = printPDF;
 
 document.getElementById('nd').addEventListener('change', save);
 document.getElementById('dd').addEventListener('change', save);
-ALL_IDS.forEach(function(id){ document.getElementById(id).addEventListener('input', save); });
+ALL_IDS.forEach(function(id){
+  var el = document.getElementById(id);
+  el.dataset.previousValue = String(safeIntegerValue(id, minimumFor(id)));
+  el.addEventListener('focus', function(){ el.dataset.previousValue = String(safeIntegerValue(id, minimumFor(id))); });
+  el.addEventListener('input', function(){
+    normalizeField(id, false);
+    var current = safeIntegerValue(id, minimumFor(id));
+    var previous = parseInt(el.dataset.previousValue, 10);
+    if (INVENTORY_IDS.indexOf(id) < 0 || current >= previous) {
+      el.dataset.previousValue = String(current);
+      save();
+    }
+  });
+  function commitField() {
+    normalizeField(id, true);
+    var current = safeIntegerValue(id, minimumFor(id));
+    var previous = parseInt(el.dataset.previousValue, 10);
+    if (INVENTORY_IDS.indexOf(id) >= 0 && current < previous && !confirm('在庫を減らしますか？')) {
+      el.value = String(previous);
+    }
+    el.dataset.previousValue = el.value;
+    save();
+  }
+  el.addEventListener('change', commitField);
+  el.addEventListener('blur', commitField);
+});
 
+document.getElementById('storage-recovery-export').addEventListener('click', function() {
+  if (!recoverySnapshot) return;
+  downloadTextFile(recoverySnapshot.key + '.txt', recoverySnapshot.raw, 'text/plain;charset=utf-8');
+});
+
+document.getElementById('btn-export-json').addEventListener('click', function() {
+  save();
+  var payload = {
+    app: 'pd-inventory',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    state: readState()
+  };
+  downloadTextFile('pd-inventory-backup-' + today.getFullYear() + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0') + '.json', JSON.stringify(payload, null, 2), 'application/json;charset=utf-8');
+});
+
+document.getElementById('btn-import-json').addEventListener('click', function() {
+  document.getElementById('backup-file-input').click();
+});
+
+document.getElementById('backup-file-input').addEventListener('change', function(event) {
+  var file = event.target.files && event.target.files[0];
+  if (!file) return;
+  file.text().then(function(raw) {
+    var parsed = JSON.parse(raw);
+    var isWrapper = isPlainObject(parsed) && ('app' in parsed || 'version' in parsed || 'state' in parsed);
+    if (isWrapper && parsed.app !== 'pd-inventory') throw new Error('backup app mismatch');
+    if (isWrapper) {
+      if (typeof parsed.version !== 'number' || parsed.version !== 1) throw new Error('backup version is not supported');
+      if (!isPlainObject(parsed.state)) throw new Error('backup state is missing');
+    }
+    var imported = isWrapper ? parsed.state : parsed;
+    if (!isValidInventoryState(imported, false, true)) throw new Error('state object is invalid');
+    if (!confirm('バックアップの項目を読み込みます。同じ項目は置き換わり、未記載の項目は残ります。よろしいですか？')) return;
+    var current = collectFormState();
+    var next = Object.assign({}, current);
+    ['nd','dd'].concat(ALL_IDS).forEach(function(id) {
+      if (imported[id] !== undefined && imported[id] !== null && typeof imported[id] !== 'object') next[id] = String(imported[id]);
+    });
+    var persisted = writeState(next);
+    restore();
+    alert(persisted
+      ? 'バックアップを読み込みました。'
+      : 'バックアップを一時的に読み込みました。端末へ保存できないため、画面を閉じる前にJSONを書き出してください。');
+  }).catch(function() {
+    alert('JSONファイルを読み込めませんでした。在庫管理ツールのバックアップか確認してください。');
+  }).finally(function() {
+    event.target.value = '';
+  });
+});
+
+discoverExistingRecovery();
 restore();
 bindMobileButtons();
 </script>

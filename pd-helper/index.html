@@ -322,6 +322,27 @@
             line-height: 1.6;
         }
 
+        .storage-notice {
+            margin-bottom: 16px;
+            padding: 14px;
+            border: 2px solid #f59e0b;
+            border-radius: 16px;
+            background: #fffbeb;
+            color: #78350f;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .storage-notice button {
+            width: 100%;
+            margin-top: 10px;
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            background: #fff;
+            color: #92400e;
+            font-weight: 700;
+        }
+
         .simple-chart {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -463,6 +484,11 @@
             </div>
         </header>
 
+        <div id="storage-notice" class="storage-notice hidden" role="status" aria-live="polite">
+            <p id="storage-notice-text"></p>
+            <button id="storage-recovery-export" type="button" class="hidden">退避した元データを書き出す</button>
+        </div>
+
         <!-- 💡 使い方ガイドアコーディオン (使い方がわからない事故を完全に防ぐ) -->
         <section class="bg-white rounded-3xl p-4 mb-6 custom-shadow border border-blue-50">
             <button type="button" onclick="toggleHelp()" class="w-full flex justify-between items-center text-sm font-bold text-slate-800 focus:outline-none">
@@ -483,7 +509,7 @@
                 <div>
                     <span class="font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded">2. 毎日の記録と保存</span>
                     <p class="mt-1.5 pl-1 text-[11px] text-slate-500">
-                        手書きノートと同じ項目に数値を入力し、一番下の「データを保存する」を押します。データはスマホ内（ブラウザ）に安全に自動保存されます。
+                        手書きノートと同じ項目に数値を入力し、一番下の「データを保存する」を押します。データはこの端末のブラウザに保存されます。端末変更やブラウザデータ消去で消えるため、定期的に書き出してください。
                     </p>
                 </div>
                 <div>
@@ -690,26 +716,37 @@
                     データバックアップ
                 </h2>
                 <p class="text-xs text-slate-400 leading-relaxed">
-                    データはスマホ本体（ブラウザ）に安全に保存されています。機種変更時や紛失に備えて、定期的にテキストをバックアップしてください。
+                    データはこの端末のブラウザに保存されます。端末変更やブラウザデータ消去で消えるため、JSONファイルとテキストのどちらかを定期的に残してください。
                 </p>
                 <div class="grid grid-cols-2 gap-3">
+                    <button id="btn-export-json" class="bg-sky-100 hover:bg-sky-200 text-sky-700 text-xs font-bold rounded-xl py-2.5 transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-download"></i>
+                        JSONを書き出す
+                    </button>
+                    <button id="btn-import-json" class="bg-sky-100 hover:bg-sky-200 text-sky-700 text-xs font-bold rounded-xl py-2.5 transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-upload"></i>
+                        JSONを読み込む
+                    </button>
                     <button id="btn-export" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl py-2.5 transition flex items-center justify-center gap-1.5">
                         <i class="fa-solid fa-file-export"></i>
-                        書き出し (コピー)
+                        テキストをコピー
                     </button>
                     <button id="btn-import" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl py-2.5 transition flex items-center justify-center gap-1.5">
                         <i class="fa-solid fa-file-import"></i>
-                        読み込み (復元)
+                        テキストを復元
                     </button>
                 </div>
+                <input id="backup-file-input" type="file" accept="application/json,.json" class="hidden">
             </section>
 
         </main>
 
         <!-- フッタークレジット -->
         <footer class="mt-8 text-center text-xs text-slate-400 space-y-1">
+            <p>記録補助用のツールです。医療判断は行わず、体調や治療の判断は主治医へ相談してください。</p>
             <p>PD-Helper v1.0.0 (MVP)</p>
             <p>&copy; 2026 ei. Powered by AI and Sorarin.</p>
+            <p>All rights reserved. 無断複製・再配布を禁止します。</p>
         </footer>
     </div>
 
@@ -732,10 +769,10 @@
         const sorarinQuotes = [
             "今日も無理せず、マイペースでいこ！☆",
             "今日の除水量、しっかり記録できたね！偉いっ！",
-            "体調はどう？しんどい時はゆっくり休もうね。",
-            "水分と塩分のコントロール、日々の積み重ねが大事だよ。",
+            "今日の記録、あとで見返せる形にしておこうね。",
+            "入力した数字を一緒に確認しておこうね。",
             "僕がいつも隣で見守ってるからね。がんばろ！",
-            "今日の調子はどう？ちょっとした変化も見逃さないでね。"
+            "気づいたことがあれば、忘れないうちに記録しておこうね。"
         ];
 
         // ページロード時にランダムでそらりんのセリフを変更
@@ -868,13 +905,185 @@
         });
 
         // データの取得・保存ロジック (localStorage)
+        const STORAGE_KEY = 'pd_helper_records';
+        const RECORD_NUMERIC_FIELDS = [
+            'net', 'day_fill', 'day_drain', 'day_net', 'kaguya_total_net', 'kaguya_day_net',
+            'kaguya_night_net', 'bp_systolic', 'bp_diastolic', 'pulse', 'weight', 'temperature', 'spo2'
+        ];
+        let memoryStorageData = {};
+        let storageAvailable = true;
+        let recoverySnapshot = null;
+
+        function isPlainObject(value) {
+            return value !== null && typeof value === 'object' && !Array.isArray(value);
+        }
+
+        function isValidDateKey(value) {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return false;
+            const parts = String(value).split('-').map(Number);
+            const date = new Date(parts[0], parts[1] - 1, parts[2]);
+            return date.getFullYear() === parts[0] && date.getMonth() === parts[1] - 1 && date.getDate() === parts[2];
+        }
+
+        function isNumericRecordValue(value) {
+            if (typeof value === 'number') return Number.isFinite(value);
+            if (typeof value !== 'string') return false;
+            const normalized = value.trim();
+            return /^-?\d+(?:\.\d+)?$/.test(normalized) && Number.isFinite(Number(normalized));
+        }
+
+        function isValidRecordsObject(records) {
+            if (!isPlainObject(records)) return false;
+            return Object.entries(records).every(function(entry) {
+                const date = entry[0];
+                const record = entry[1];
+                if (!isValidDateKey(date) || !isPlainObject(record)) return false;
+                if (!isNumericRecordValue(record.net)) return false;
+                return RECORD_NUMERIC_FIELDS.every(function(field) {
+                    const value = record[field];
+                    return value === undefined || value === null || value === '' || isNumericRecordValue(value);
+                });
+            });
+        }
+
+        function storageTimestamp() {
+            const now = new Date();
+            return [
+                now.getFullYear(),
+                String(now.getMonth() + 1).padStart(2, '0'),
+                String(now.getDate()).padStart(2, '0'),
+                String(now.getHours()).padStart(2, '0'),
+                String(now.getMinutes()).padStart(2, '0'),
+                String(now.getSeconds()).padStart(2, '0')
+            ].join('');
+        }
+
+        function showStorageNotice(message, showRecoveryButton) {
+            const notice = document.getElementById('storage-notice');
+            const text = document.getElementById('storage-notice-text');
+            const button = document.getElementById('storage-recovery-export');
+            if (!notice || !text || !button) return;
+            text.textContent = message;
+            notice.classList.remove('hidden');
+            button.classList.toggle('hidden', !showRecoveryButton);
+        }
+
+        function quarantineBrokenStorage(raw) {
+            const backupKey = `${STORAGE_KEY}_corrupt_backup_${storageTimestamp()}`;
+            recoverySnapshot = { key: backupKey, raw: raw };
+            let isolated = false;
+            try {
+                localStorage.setItem(backupKey, raw);
+                localStorage.setItem(STORAGE_KEY, '{}');
+                isolated = true;
+            } catch (error) {
+                storageAvailable = false;
+            }
+            memoryStorageData = {};
+            showStorageNotice(
+                isolated
+                    ? '記録の一部が読めなかったので退避しました。新しい記録欄は空の状態で起動しています。'
+                    : '記録の一部が読めませんでした。元データはこの画面を閉じる前に書き出してください。現在は一時表示で動作しています。',
+                true
+            );
+            return memoryStorageData;
+        }
+
+        function discoverExistingRecovery() {
+            if (recoverySnapshot || !storageAvailable) return;
+            try {
+                const prefix = `${STORAGE_KEY}_corrupt_backup_`;
+                const keys = [];
+                for (let i = 0; i < localStorage.length; i += 1) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith(prefix)) keys.push(key);
+                }
+                keys.sort();
+                const latest = keys[keys.length - 1];
+                if (!latest) return;
+                recoverySnapshot = { key: latest, raw: localStorage.getItem(latest) || '' };
+                showStorageNotice('以前、読めない記録を退避しています。必要なら元データを書き出せます。', true);
+            } catch (error) {
+                // 退避データ一覧が読めなくても、通常の記録入力は継続する。
+            }
+        }
+
         function getStorageData() {
-            const raw = localStorage.getItem('pd_helper_records');
-            return raw ? JSON.parse(raw) : {};
+            if (!storageAvailable) return memoryStorageData;
+            let raw;
+            try {
+                raw = localStorage.getItem(STORAGE_KEY);
+            } catch (error) {
+                storageAvailable = false;
+                showStorageNotice('このブラウザでは端末保存を利用できません。画面を閉じるまでの一時表示で動作しています。', false);
+                return memoryStorageData;
+            }
+            if (!raw) {
+                memoryStorageData = {};
+                return memoryStorageData;
+            }
+            try {
+                const parsed = JSON.parse(raw);
+                if (!isValidRecordsObject(parsed)) throw new Error('records are invalid');
+                memoryStorageData = parsed;
+                return memoryStorageData;
+            } catch (error) {
+                return quarantineBrokenStorage(raw);
+            }
         }
 
         function saveStorageData(data) {
-            localStorage.setItem('pd_helper_records', JSON.stringify(data));
+            if (!isPlainObject(data)) return false;
+            memoryStorageData = data;
+            if (!storageAvailable) return false;
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                return true;
+            } catch (error) {
+                storageAvailable = false;
+                showStorageNotice('端末への保存に失敗しました。画面を閉じる前にJSONを書き出してください。', false);
+                return false;
+            }
+        }
+
+        function downloadTextFile(filename, text, type) {
+            const blob = new Blob([text], { type: type || 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function normalizeImportedRecords(parsed) {
+            if (isPlainObject(parsed) && parsed.app !== undefined && parsed.app !== 'pd-helper') {
+                throw new Error('backup app mismatch');
+            }
+            if (isPlainObject(parsed) && parsed.version !== undefined) {
+                const version = Number(parsed.version);
+                if (!Number.isInteger(version) || version !== 1) throw new Error('backup version is not supported');
+            }
+            const records = isPlainObject(parsed) && isPlainObject(parsed.records) ? parsed.records : parsed;
+            if (!isValidRecordsObject(records)) throw new Error('records object is invalid');
+            return records;
+        }
+
+        function restoreImportedRecords(records) {
+            const current = getStorageData();
+            const count = Object.keys(records).length;
+            if (!confirm(`${count}日分を読み込みます。同じ日付の記録は読み込んだ内容で置き換わります。よろしいですか？`)) return false;
+            const merged = Object.assign({}, current, records);
+            const persisted = saveStorageData(merged);
+            alert(persisted
+                ? `${count}日分を読み込みました。`
+                : `${count}日分を一時的に読み込みました。端末へ保存できないため、画面を閉じる前にJSONを書き出してください。`);
+            renderHistory();
+            renderCalendar();
+            renderChart();
+            return true;
         }
 
         function parseSignedInt(value) {
@@ -937,10 +1146,12 @@
 
             const data = getStorageData();
             data[date] = record;
-            saveStorageData(data);
+            const saved = saveStorageData(data);
 
             rotateSorarinQuote();
-            alert("データを保存しました！");
+            alert(saved
+                ? "この端末のブラウザに保存しました！"
+                : "画面内には反映しましたが、端末へ保存できませんでした。画面を閉じる前にJSONを書き出してください。");
             
             // UI更新
             renderHistory();
@@ -960,7 +1171,7 @@
 
         function recordSummaryText(date, r) {
             if (!r) return `${date} の記録はまだありません。`;
-            const totalNet = Number.isFinite(r.net) ? r.net : 0;
+            const totalNet = Number.isFinite(Number(r.net)) ? Number(r.net) : 0;
             const totalNetText = `${totalNet >= 0 ? '+' : ''}${totalNet} ml`;
             const bpText = (r.bp_systolic && r.bp_diastolic) ? `${r.bp_systolic}/${r.bp_diastolic}` : '未記録';
             const weightText = formatDecimal(r.weight, 'kg');
@@ -1011,7 +1222,7 @@
                 btn.type = 'button';
                 btn.className = `calendar-day${record ? ' has-record' : ''}${date === selectedCalendarDate ? ' selected' : ''}`;
                 const netLabel = record
-                    ? (Number.isFinite(record.net) ? `${record.net >= 0 ? '+' : ''}${record.net}ml` : '●')
+                    ? (Number.isFinite(Number(record.net)) ? `${Number(record.net) >= 0 ? '+' : ''}${Number(record.net)}ml` : '●')
                     : ' ';
                 btn.innerHTML = `<span>${day}</span><small>${netLabel}</small>`;
                 btn.setAttribute('aria-label', `${month + 1}月${day}日${record ? '（記録あり）' : ''}`);
@@ -1077,7 +1288,7 @@
                 const dObj = parseDateLocal(date);
                 const formatD = `${dObj.getMonth()+1}/${dObj.getDate()}`;
                 
-                const totalNet = r.net !== null ? r.net : 0;
+                const totalNet = Number.isFinite(Number(r.net)) ? Number(r.net) : 0;
                 const totalNetText = `${totalNet >= 0 ? '+' : ''}${totalNet} ml`;
 
                 // 昼間手動透析
@@ -1170,7 +1381,7 @@
             const dObj = parseDateLocal(date);
             const formatD = `${dObj.getMonth()+1}/${dObj.getDate()}`;
             
-            const totalNet = r.net !== null ? r.net : 0;
+            const totalNet = Number.isFinite(Number(r.net)) ? Number(r.net) : 0;
             const totalNetText = `${totalNet >= 0 ? '+' : ''}${totalNet} ml`;
 
             // 昼間手動透析
@@ -1251,8 +1462,8 @@
                 labels.push(`${d.getMonth()+1}/${d.getDate()}`);
                 
                 const rec = data[dStr];
-                netData.push(rec && rec.net !== null ? rec.net : 0);
-                systolicData.push(rec && rec.bp_systolic !== null ? rec.bp_systolic : null);
+                netData.push(rec && Number.isFinite(Number(rec.net)) ? Number(rec.net) : 0);
+                systolicData.push(rec && Number.isFinite(Number(rec.bp_systolic)) ? Number(rec.bp_systolic) : null);
             }
 
             return { labels, netData, systolicData };
@@ -1358,12 +1569,50 @@
         }
 
         // バックアップ・インポート機能
-        document.getElementById('btn-export').addEventListener('click', function() {
-            const dataStr = localStorage.getItem('pd_helper_records');
-            if(!dataStr || dataStr === '{}') {
+        document.getElementById('storage-recovery-export').addEventListener('click', function() {
+            if (!recoverySnapshot) return;
+            downloadTextFile(`${recoverySnapshot.key}.txt`, recoverySnapshot.raw, 'text/plain;charset=utf-8');
+        });
+
+        document.getElementById('btn-export-json').addEventListener('click', function() {
+            const records = getStorageData();
+            if (Object.keys(records).length === 0) {
                 alert("バックアップするデータがありません。");
                 return;
             }
+            const payload = {
+                app: 'pd-helper',
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                records: records
+            };
+            downloadTextFile(`pd-helper-backup-${today}.json`, JSON.stringify(payload, null, 2), 'application/json;charset=utf-8');
+        });
+
+        document.getElementById('btn-import-json').addEventListener('click', function() {
+            document.getElementById('backup-file-input').click();
+        });
+
+        document.getElementById('backup-file-input').addEventListener('change', function(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            file.text().then(function(raw) {
+                const records = normalizeImportedRecords(JSON.parse(raw));
+                restoreImportedRecords(records);
+            }).catch(function() {
+                alert('JSONファイルを読み込めませんでした。PD-Helperのバックアップか確認してください。');
+            }).finally(function() {
+                event.target.value = '';
+            });
+        });
+
+        document.getElementById('btn-export').addEventListener('click', function() {
+            const data = getStorageData();
+            if (Object.keys(data).length === 0) {
+                alert("バックアップするデータがありません。");
+                return;
+            }
+            const dataStr = JSON.stringify(data);
             navigator.clipboard.writeText(dataStr).then(() => {
                 alert("バックアップ用データをクリップボードにコピーしました！メモ帳などに保存してください。");
             }).catch(err => {
@@ -1375,22 +1624,15 @@
             const raw = prompt("バックアップしたJSONテキストを貼り付けてください：");
             if (!raw) return;
             try {
-                const parsed = JSON.parse(raw);
-                if (typeof parsed === 'object' && parsed !== null) {
-                    saveStorageData(parsed);
-                    alert("データを正常に復元しました！");
-                    renderHistory();
-                    renderCalendar();
-                    renderChart();
-                } else {
-                    alert("データの形式が正しくありません。");
-                }
+                const records = normalizeImportedRecords(JSON.parse(raw));
+                restoreImportedRecords(records);
             } catch(e) {
                 alert("解析に失敗しました。正しいデータを貼り付けてください。");
             }
         });
 
         // 起動処理
+        discoverExistingRecovery();
         rotateSorarinQuote();
         renderHistory();
         renderCalendar();
