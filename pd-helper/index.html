@@ -353,6 +353,21 @@
             padding: 12px;
         }
 
+        .chart-frame {
+            width: 100%;
+            min-width: 0;
+            height: 12rem;
+            overflow: hidden;
+        }
+
+        .chart-frame canvas {
+            display: block;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 100% !important;
+            min-width: 0;
+        }
+
         .simple-chart-item {
             display: flex;
             flex-direction: column;
@@ -668,7 +683,7 @@
                     <i class="fa-solid fa-chart-line text-sky-500"></i>
                     過去7日間の推移
                 </h2>
-                <div class="w-full h-48 bg-slate-50 rounded-2xl p-2 border border-slate-100 flex items-center justify-center relative">
+                <div class="chart-frame w-full h-48 bg-slate-50 rounded-2xl p-2 border border-slate-100 flex items-center justify-center relative">
                     <canvas id="pdChart"></canvas>
                 </div>
             </section>
