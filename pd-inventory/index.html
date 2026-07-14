@@ -24,6 +24,35 @@ body {
   width: 100%;
 }
 
+.cross-app-nav {
+  position: fixed;
+  left: 50%;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  z-index: 80;
+  width: min(calc(100% - 24px), 520px);
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border: 2px solid #1d4ed8;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #1d4ed8;
+  box-shadow: 0 10px 28px rgba(30,64,175,0.24);
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1.35;
+  text-align: center;
+  text-decoration: none;
+  transform: translateX(-50%);
+  touch-action: manipulation;
+}
+.cross-app-nav:focus-visible {
+  outline: 4px solid rgba(59,130,246,0.35);
+  outline-offset: 2px;
+}
+
 /* ヘッダー */
 .hd {
   background: linear-gradient(135deg, #1e40af, #3b82f6);
@@ -246,7 +275,7 @@ input[type="date"] {
 @media print {
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body { background: white; padding: 0; font-size: 13px; }
-  .blk, .calc-btn, .legend, #pdf-btn-wrap { display: none !important; }
+  .blk, .calc-btn, .legend, #pdf-btn-wrap, .cross-app-nav { display: none !important; }
   #print-header {
     display: block !important;
     text-align: center; padding: 12px;
@@ -274,6 +303,7 @@ input[type="date"] {
   <h1>🩺 腹膜透析 在庫管理</h1>
   <div class="sub" id="today-lbl"></div>
 </div>
+<a id="to-pd-helper" class="cross-app-nav" href="../pd-helper/index.html" aria-label="記録ツールへ戻る">← 記録ツールへ戻る</a>
 <div id="print-header"></div>
 
 <div class="guide">
@@ -785,6 +815,12 @@ function collectFormState() {
 function save() {
   return writeState(collectFormState());
 }
+
+document.getElementById('to-pd-helper').addEventListener('click', function(event) {
+  if (save()) return;
+  event.preventDefault();
+  alert('入力中の内容をこの端末に保存できなかったため、移動を止めました。入力値を確認してから、もう一度お試しください。');
+});
 
 function restore() {
   var s = readState();

@@ -36,6 +36,36 @@
             padding-bottom: calc(96px + env(safe-area-inset-bottom));
         }
 
+        .cross-app-nav {
+            position: fixed;
+            left: 50%;
+            bottom: calc(10px + env(safe-area-inset-bottom));
+            z-index: 80;
+            width: min(calc(100% - 24px), 520px);
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border: 2px solid #1d4ed8;
+            border-radius: 16px;
+            background: #ffffff;
+            color: #1d4ed8;
+            box-shadow: 0 10px 28px rgba(30, 64, 175, 0.24);
+            font-size: 0.95rem;
+            font-weight: 800;
+            line-height: 1.35;
+            text-align: center;
+            text-decoration: none;
+            transform: translateX(-50%);
+            touch-action: manipulation;
+        }
+
+        .cross-app-nav:focus-visible {
+            outline: 4px solid rgba(14, 165, 233, 0.35);
+            outline-offset: 2px;
+        }
+
         .max-w-md {
             max-width: none !important;
             width: 100% !important;
@@ -499,6 +529,10 @@
             </div>
         </header>
 
+        <a id="to-pd-inventory" class="cross-app-nav" href="../pd-inventory/index.html" aria-label="在庫管理ツールへ移動する">
+            在庫管理へ →
+        </a>
+
         <div id="storage-notice" class="storage-notice hidden" role="status" aria-live="polite">
             <p id="storage-notice-text"></p>
             <button id="storage-recovery-export" type="button" class="hidden">退避した元データを書き出す</button>
@@ -921,6 +955,12 @@
 
         // データの取得・保存ロジック (localStorage)
         const STORAGE_KEY = 'pd_helper_records';
+        const NAVIGATION_DRAFT_KEY = 'pd_helper_navigation_draft_v1';
+        const NAVIGATION_DRAFT_FIELDS = [
+            'record-date', 'day-fill', 'day-drain', 'kaguya-total-net', 'kaguya-day-net',
+            'kaguya-night-net', 'bp-systolic', 'bp-diastolic', 'pulse-rate', 'body-weight',
+            'body-temperature', 'spo2'
+        ];
         const RECORD_NUMERIC_FIELDS = [
             'net', 'day_fill', 'day_drain', 'day_net', 'kaguya_total_net', 'kaguya_day_net',
             'kaguya_night_net', 'bp_systolic', 'bp_diastolic', 'pulse', 'weight', 'temperature', 'spo2'
@@ -928,6 +968,46 @@
         let memoryStorageData = {};
         let storageAvailable = true;
         let recoverySnapshot = null;
+
+        function persistNavigationDraft() {
+            const values = {};
+            NAVIGATION_DRAFT_FIELDS.forEach(function(id) {
+                const field = document.getElementById(id);
+                if (field) values[id] = field.value;
+            });
+            try {
+                localStorage.setItem(NAVIGATION_DRAFT_KEY, JSON.stringify({ version: 1, values: values }));
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function restoreNavigationDraft() {
+            let raw = null;
+            try {
+                raw = localStorage.getItem(NAVIGATION_DRAFT_KEY);
+                if (!raw) return false;
+                const draft = JSON.parse(raw);
+                if (!draft || draft.version !== 1 || !isPlainObject(draft.values)) throw new Error('invalid navigation draft');
+                NAVIGATION_DRAFT_FIELDS.forEach(function(id) {
+                    const field = document.getElementById(id);
+                    const value = draft.values[id];
+                    if (field && typeof value === 'string') field.value = value;
+                });
+                updateLiveCalculation();
+                return true;
+            } catch (error) {
+                try { localStorage.removeItem(NAVIGATION_DRAFT_KEY); } catch (ignore) {}
+                return false;
+            }
+        }
+
+        document.getElementById('to-pd-inventory').addEventListener('click', function(event) {
+            if (persistNavigationDraft()) return;
+            event.preventDefault();
+            alert('入力中の内容をこの端末に一時保存できなかったため、移動を止めました。先に「この日のデータを保存する」を押してください。');
+        });
 
         function isPlainObject(value) {
             return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -1162,6 +1242,9 @@
             const data = getStorageData();
             data[date] = record;
             const saved = saveStorageData(data);
+            if (saved) {
+                try { localStorage.removeItem(NAVIGATION_DRAFT_KEY); } catch (error) {}
+            }
 
             rotateSorarinQuote();
             alert(saved
@@ -1648,6 +1731,7 @@
 
         // 起動処理
         discoverExistingRecovery();
+        restoreNavigationDraft();
         rotateSorarinQuote();
         renderHistory();
         renderCalendar();
